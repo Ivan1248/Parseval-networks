@@ -1,0 +1,46 @@
+% http://www.texample.net/tikz/examples/neural-network/
+% TODO: \usetikzlibrary{fit}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!100, node distance=\layersep]
+\definecolor{lcolor}{RGB}{210,230,230}
+\definecolor{inputcolor}{RGB}{0,0,0}
+
+\small
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+\tikzstyle{every pin edge}=[<-,shorten <=1pt]
+\tikzstyle{neuron}=[circle, minimum size=17pt, draw=black!100, fill=white]
+\tikzstyle{input}=[neuron]
+\tikzstyle{layer}=[rectangle, fill=lcolor, minimum size=17pt, inner sep=3pt, outer sep=0pt]
+\tikzstyle{annot} = [text width=4em, text centered]
+\def\layersep{2cm}
+
+% Draw the input layer nodes
+\foreach \name/\y in {1,...,3} % the same as \foreach \name / \y in {1/1,2/2,3/3,4/4}
+  \node[input, pin=left:$x_\y$] (I-\name) at (0,-\y) {};
+% Draw the hidden layer nodes
+\foreach \name/\y in {1,...,4}
+  \path[yshift=0.5cm] node[neuron] (H-\name) at (\layersep,-\y cm) {};
+% Draw the output layer node
+\foreach \name/\y in {1,2}
+  \path[yshift=-0.5cm] node[neuron,pin={[pin edge={->}]right:$y_\y$}] (O-\name) at (2*\layersep,-\y cm) {};
+
+% Connect every node in the input layer with every node in the hidden layer.
+\foreach \source in {1,...,3}
+  \foreach \dest in {1,...,4}
+    \path (I-\source) edge (H-\dest);
+% Connect every node in the hidden layer with the output layer
+\foreach \source in {1,...,4}
+  \foreach \dest in {1,2}
+   \path (H-\source) edge (O-\dest);
+   
+\begin{pgfonlayer}{background}
+  %\node[layer, fit=(I-1) (I-3)] {};
+  \node[layer, fit=(H-1) (H-4)] {};
+  \node[layer, fit=(O-1) (O-2)] {}; 
+\end{pgfonlayer}
+
+% Annotate the layers
+\node[annot,above of=H-1, node distance=1cm] (hl) {skriveni sloj};
+\node[annot,left of=hl] {ulazni sloj};
+\node[annot,right of=hl] {izlazni sloj};
+\end{tikzpicture}

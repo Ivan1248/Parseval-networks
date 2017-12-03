@@ -1,0 +1,122 @@
+\begin{thebibliography}{18}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[pre()]{prec-rec}
+Precision-recall — scikit-learn 0.18.1 documentation.
+\newblock URL
+  \url{http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html}.
+\newblock [27.3.2017.].
+
+\bibitem[Everingham i Winn(2012)]{pascalVOC-devkit}
+M.~Everingham i J.~Winn.
+\newblock {{The PASCAL Visual Object Classes Challenge 2012 (VOC2012)
+  Development Kit}}, 2012.
+\newblock URL
+  \url{http://host.robots.ox.ac.uk/pascal/VOC/voc2012/devkit_doc.pdf}.
+
+\bibitem[Girshick(2014)]{objdet2014}
+Ross Girshick.
+\newblock {{Object Detection, Deep Learning, and R-CNNs}}.
+\newblock 2014.
+\newblock URL
+  \url{https://homes.cs.washington.edu/~shapiro/EE596/notes/DeepLearning.pptx}.
+
+\bibitem[Girshick(2015)]{fastrcnn}
+Ross~B. Girshick.
+\newblock {Fast R-CNN}.
+\newblock \emph{CoRR}, abs/1504.08083, 2015.
+\newblock URL \url{http://arxiv.org/abs/1504.08083}.
+
+\bibitem[Grubišić(2016)]{semseg-ja}
+Ivan Grubišić.
+\newblock Semantička segmentacija dubokim konvolucijskim mrežama, 2016.
+
+\bibitem[He et~al.(2015)He, Zhang, Ren, i Sun]{resnet}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, i Jian Sun.
+\newblock {Deep Residual Learning for Image Recognition}.
+\newblock \emph{CoRR}, abs/1512.03385, 2015.
+\newblock URL \url{http://arxiv.org/abs/1512.03385}.
+
+\bibitem[Hong et~al.(2016)Hong, Roh, Kim, Cheon, i Park]{pvanet}
+Sanghoon Hong, Byung{-}Seok Roh, Kye{-}Hyeon Kim, Yeongjae Cheon, i Minje Park.
+\newblock {PVANet: Lightweight Deep Neural Networks for Real-time Object
+  Detection}.
+\newblock \emph{CoRR}, abs/1611.08588, 2016.
+\newblock URL \url{http://arxiv.org/abs/1611.08588}.
+
+\bibitem[Liu et~al.(2015)Liu, Anguelov, Erhan, Szegedy, Reed, Fu, i Berg]{ssd}
+Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott~E. Reed,
+  Cheng{-}Yang Fu, i Alexander~C. Berg.
+\newblock {SSD: Single Shot MultiBox Detector}.
+\newblock \emph{CoRR}, abs/1512.02325, 2015.
+\newblock URL \url{http://arxiv.org/abs/1512.02325}.
+
+\bibitem[Nielsen(2015)]{nndl}
+Michael~A. Nielsen.
+\newblock {{Neural Networks and Deep Learning}}, 2015.
+\newblock URL \url{http://neuralnetworksanddeeplearning.com/}.
+
+\bibitem[Olah(2016)]{colah}
+Christopher Olah.
+\newblock {Colah's blog}, 2016.
+\newblock URL \url{http://colah.github.io/}.
+\newblock [10.5.2016.].
+
+\bibitem[Radford et~al.(2015)Radford, Metz, i Chintala]{gan}
+Alec Radford, Luke Metz, i Soumith Chintala.
+\newblock {Unsupervised Representation Learning with Deep Convolutional
+  Generative Adversarial Networks}.
+\newblock \emph{CoRR}, abs/1511.06434, 2015.
+\newblock URL \url{http://arxiv.org/abs/1511.06434}.
+
+\bibitem[Redmon(2017)]{yolo2web}
+Joseph Redmon.
+\newblock {{YOLO: Real-Time Object Detection}}, 2017.
+\newblock URL \url{https://pjreddie.com/darknet/yolo/}.
+\newblock [26.3.2017.].
+
+\bibitem[Redmon i Farhadi(2016)]{yolov2}
+Joseph Redmon i Ali Farhadi.
+\newblock {YOLO9000: Better, Faster, Stronger}.
+\newblock \emph{CoRR}, abs/1612.08242, 2016.
+\newblock URL \url{http://arxiv.org/abs/1612.08242}.
+
+\bibitem[Ren et~al.(2015)Ren, He, Girshick, i Sun]{fasterrcnn}
+Shaoqing Ren, Kaiming He, Ross~B. Girshick, i Jian Sun.
+\newblock {Faster R-CNN: Towards Real-Time Object Detection with Region
+  Proposal Networks}.
+\newblock \emph{CoRR}, abs/1506.01497, 2015.
+\newblock URL \url{http://arxiv.org/abs/1506.01497}.
+
+\bibitem[Simonyan i Zisserman(2014)]{vgg}
+Karen Simonyan i Andrew Zisserman.
+\newblock {Very Deep Convolutional Networks for Large-Scale Image Recognition}.
+\newblock \emph{CoRR}, abs/1409.1556, 2014.
+\newblock URL \url{http://arxiv.org/abs/1409.1556}.
+
+\bibitem[Uijlings et~al.(2012)Uijlings, van~de Sande, Gevers, i
+  Smeulders]{selectiveSearch}
+J.~R.~R. Uijlings, K.~E.~A. van~de Sande, T.~Gevers, i A.~W.~M. Smeulders.
+\newblock {{Selective Search for Object Detection}}.
+\newblock 2012.
+\newblock URL
+  \url{https://ivi.fnwi.uva.nl/isis/publications/2013/UijlingsIJCV2013/UijlingsIJCV2013.pdf}.
+
+\bibitem[Wikipedia(2017)]{wiki-ir}
+Wikipedia.
+\newblock {Information retrieval} --- {W}ikipedia, 2017.
+\newblock URL \url{https://en.wikipedia.org/wiki/Information_retrieval}.
+\newblock [28.4.2017].
+
+\bibitem[Zitnick i Doll\'ar(2014)]{edgeBoxes}
+C.~Lawrence Zitnick i Piotr Doll\'ar.
+\newblock {Edge Boxes}: {Locating Object Proposals from Edges}.
+\newblock 2014.
+\newblock URL
+  \url{https://www.microsoft.com/en-us/research/wp-content/uploads/2014/09/ZitnickDollarECCV14edgeBoxes.pdf}.
+
+\end{thebibliography}

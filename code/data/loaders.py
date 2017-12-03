@@ -1,0 +1,38 @@
+import numpy as np
+import pickle
+
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # data/*
+from dataset import Dataset
+from preparers import Iccv09Preparer
+
+
+def load_iccv09(data_dir):
+    data_dir = Iccv09Preparer.prepare(data_dir)
+    return Dataset.load(data_dir)
+
+def _unpickle(file):
+    with open(file, 'rb') as f:
+        return pickle.load(f, encoding='latin1')
+
+def load_cifar10_train(data_dir):
+    # https://dlunizg.github.io/lab2/
+    h, w, ch = 32, 32, 3
+    train_x = np.ndarray((0, h * w * ch), dtype=np.float32)
+    train_y = []
+    for i in range(1, 6):
+        subset = _unpickle(os.path.join(data_dir, 'data_batch_%d' % i))
+        train_x = np.vstack((train_x, subset['data']))
+        train_y += subset['labels']
+    train_x = train_x.reshape((-1, ch, h, w)).transpose(0, 2, 3, 1)
+    train_y = np.array(train_y, dtype=np.int32)
+    return Dataset(train_x, train_y, 10)
+
+def load_cifar10_test(data_dir):
+    # https://dlunizg.github.io/lab2/
+    h, w, ch = 32, 32, 3
+    subset = _unpickle(os.path.join(data_dir, 'test_batch'))
+    test_x = subset['data'].reshape(
+        (-1, ch, h, w)).transpose(0, 2, 3, 1).astype(np.float32)
+    test_y = np.array(subset['labels'], dtype=np.int32)
+    return Dataset(test_x, test_y, 10)

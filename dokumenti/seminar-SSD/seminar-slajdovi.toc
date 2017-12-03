@@ -1,0 +1,7 @@
+\beamer@endinputifotherversion {3.36pt}
+\select@language {croatian}
+\beamer@sectionintoc {1}{Uvod}{3}{0}{1}
+\beamer@sectionintoc {2}{Konvolucijske mre\IeC {\v z}e}{5}{0}{2}
+\beamer@sectionintoc {3}{Pronala\IeC {\v z}enje objekata}{8}{0}{3}
+\beamer@sectionintoc {4}{SSD: Single Shot MultiBox Detector}{16}{0}{4}
+\beamer@sectionintoc {5}{Rezultati}{23}{0}{5}

@@ -1,0 +1,17 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: seminar.aux
+A level-1 auxiliary file: bibliography.aux
+The style file: fer.bst
+Database file #1: literatura.bib
+Warning--entry type for "semseg-ja" isn't style-file defined
+--line 138 of file literatura.bib
+I was expecting a `,' or a `}'---line 142 of file literatura.bib
+ :  
+ :  url       = "http://www.dropbox.com/s/1wtq60o2unw7k59/zavrsni.pdf"
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--to sort, need author or key in prec-rec
+Warning--empty year in prec-rec
+Warning--empty journal in objdet2014
+Warning--empty journal in selectiveSearch
+Warning--empty journal in edgeBoxes
+(There was 1 error message)
