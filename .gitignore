@@ -84,5 +84,8 @@ ENV/
 # mypy
 .mypy_cache/
 
+# vscode
+#.vscode/
+
 # Specific
 /data
