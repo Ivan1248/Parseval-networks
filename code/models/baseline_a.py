@@ -18,22 +18,22 @@ class ClfBaselineA(AbstractModel):
                  class0_unknown=False,
                  batch_size=32,
                  conv_layer_count=4,
-                 learning_rate=1e-3,
+                 learning_rate_policy=1e-3,
                  training_log_period=1,
                  name='ClfBaselineA'):
         self.conv_layer_count = conv_layer_count
-        self.learning_rate = learning_rate
         self.completed_epoch_count = 0
         self.class0_unknown = class0_unknown
         super().__init__(
             input_shape=input_shape,
             class_count=class_count,
             batch_size=batch_size,
+            learning_rate_policy=learning_rate_policy,
             training_log_period=training_log_period,
             name=name)
 
-    def _build_graph(self):
-        from tf_utils.layers import conv2d, max_pool, rescale_bilinear, avg_pool
+    def _build_graph(self, learning_rate, epoch, is_training):
+        from tf_utils.layers import conv2d, max_pool, rescale_bilinear, avg_pool, bn_relu
 
         def layer_width(layer: int):  # number of channels (features per pixel)
             return min([4 * 4**(layer + 1), 64])
@@ -44,7 +44,6 @@ class ClfBaselineA(AbstractModel):
         # Input image and labels placeholders
         input = tf.placeholder(tf.float32, shape=input_shape)
         target = tf.placeholder(tf.float32, shape=output_shape)
-        is_training = tf.placeholder(tf.bool)
 
         # Downsampled input (to improve speed at the cost of accuracy)
         h = rescale_bilinear(input, 0.5)
@@ -52,9 +51,9 @@ class ClfBaselineA(AbstractModel):
         # Hidden layers
         def conv_bn_relu(x, width):
             x = conv2d(x, 3, width, bias=False)
-            x = tf.layers.batch_normalization(x, -1, training=is_training, fused=True)
+            x = bn_relu(x, is_training)
             return tf.nn.relu(x)
-        
+
         h = conv_bn_relu(h, layer_width(0))
         for l in range(1, self.conv_layer_count):
             h = max_pool(h, 2)
@@ -71,35 +70,25 @@ class ClfBaselineA(AbstractModel):
         cost = -tf.reduce_mean(ts(target) * tf.log(ts(clipped_probs)))
 
         # Optimization
-        optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate)
         training_step = optimizer.minimize(cost)
 
         # Dense predictions and labels
         preds, dense_labels = tf.argmax(probs, 1), tf.argmax(target, 1)
 
         # Other evaluation measures
-        self._n_accuracy = tf.reduce_mean(
+        accuracy = tf.reduce_mean(
             tf.cast(tf.equal(preds, dense_labels), tf.float32))
 
         return AbstractModel.EssentialNodes(
             input=input,
             target=target,
             probs=probs,
-            loss=cost,
+            loss=loss,
             training_step=training_step,
-            is_training=is_training)
-
-    def train(self,
-              train_data: Dataset,
-              validation_data: Dataset = None,
-              epoch_count: int = 1):
-        self._train(train_data, validation_data, epoch_count, {
-            'accuracy': self._n_accuracy
-        })
-
-    def test(self, dataset):
-        """ Override if extra fetches (maybe some evaluation measures) are needed """
-        self._test(dataset, extra_fetches={'accuracy': self._n_accuracy})
+            evaluation={
+                'accuracy': accuracy
+            })
 
 
 def main(epoch_count=1):
@@ -109,26 +98,27 @@ def main(epoch_count=1):
     from ioutil import console
 
     print("Loading and deterministically shuffling data...")
-
     data_path = os.path.join(
         ioutil.path.find_ancestor(os.path.dirname(__file__), 'projects'),
-        'datasets/iccv09')
-    ds = loaders.load_iccv09(data_path)
+        'datasets/cifar-10-batches-py')
+    ds = loaders.load_cifar10_train(data_path)
     labels = np.array([np.bincount(l.flat).argmax() for l in ds.labels])
-    ds=Dataset(ds.images, labels, ds.class_count)
+    ds = Dataset(ds.images, labels, ds.class_count)
     ds.shuffle(order_determining_number=0.5)
+
     print("Splitting dataset...")
-    ds_trainval, ds_test = ds.split(0, int(ds.size * 0.8))
-    ds_train, ds_val = ds_trainval.split(0, int(ds_trainval.size * 0.8))
+    ds_train, ds_val = ds.split(0, int(ds.size * 0.8))
+    print(ds_train.size, ds_val.size)
+
     print("Initializing model...")
     model = ClfBaselineA(
         input_shape=ds.image_shape,
         class_count=ds.class_count,
         class0_unknown=True,
-        batch_size=16,
-        learning_rate=1e-3,
+        batch_size=128,
+        learning_rate_policy=1e-3,
         name='ClfBaselineA-bs16',
-        training_log_period=5)
+        training_log_period=100)
 
     def handle_step(i):
         text = console.read_line(impatient=True, discard_non_last=True)
@@ -145,7 +135,8 @@ def main(epoch_count=1):
     #model.test(ds_val)
     for i in range(epoch_count):
         model.train(ds_train, epoch_count=1)
-        model.test(ds_val)
+        model.test(ds_train, "Training")
+        model.test(ds_val, "Validation")
     model.save_state()
 
 

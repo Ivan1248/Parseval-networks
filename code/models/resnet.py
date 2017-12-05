@@ -11,89 +11,84 @@ from data import Dataset, MiniBatchReader
 from abstract_model import AbstractModel
 
 
-class ClfBaselineA(AbstractModel):
+class ResNet(AbstractModel):
     def __init__(self,
                  input_shape,
                  class_count,
-                 class0_unknown=False,
-                 batch_size=32,
-                 conv_layer_count=4,
-                 learning_rate=1e-3,
+                 batch_size=128,
+                 learning_rate_policy=1e-2,
+                 block_kind=[3, 3],
+                 group_lengths=[3, 3, 3],
+                 first_layer_width=16,
                  training_log_period=1,
-                 name='ClfBaselineA'):
-        self.conv_layer_count = conv_layer_count
-        self.learning_rate = learning_rate
+                 name='ResNet'):
         self.completed_epoch_count = 0
-        self.class0_unknown = class0_unknown
+        self.block_kind = block_kind
+        self.group_lengths = group_lengths
+        self.depth = 1 + sum(group_lengths)*len(block_kind) + 1
+        self.first_layer_width = first_layer_width
         super().__init__(
             input_shape=input_shape,
             class_count=class_count,
             batch_size=batch_size,
+            learning_rate_policy=learning_rate_policy,
             training_log_period=training_log_period,
             name=name)
 
-    def _build_graph(self):
-        from tf_utils.layers import conv2d, max_pool, rescale_bilinear, avg_pool, resnet
-
-        input_shape = [None] + list(self.input_shape)
-        output_shape = [None, self.class_count]
+    def _build_graph(self, learning_rate, epoch, is_training):
+        from tf_utils.layers import conv2d, resnet
 
         # Input image and labels placeholders
+        input_shape = [None] + list(self.input_shape)
+        output_shape = [None, self.class_count]
         input = tf.placeholder(tf.float32, shape=input_shape)
         target = tf.placeholder(tf.float32, shape=output_shape)
-        is_training = tf.placeholder(tf.bool)
 
         # Hidden layers
-        n, k = 16, 4  # n-number of convolutional layers, k-widening factor
-        first_group_width = 16 * k
-        block_kind=[3,3]
-        blocks_per_group, group_count = n // (4*len(block_kind)), 4
         h = resnet(
             input,
-            first_group_width, [blocks_per_group] * group_count,
+            first_layer_width=self.first_layer_width,
+            group_lengths=self.group_lengths,
             is_training=is_training)
 
         # Global pooling and softmax classification
-        h = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
-        logits = conv2d(h, 1, self.class_count)
+        h = conv2d(h, 1, self.class_count)
+        logits = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
+        logits = tf.reshape(logits, [-1, self.class_count])
         probs = tf.nn.softmax(logits)
-        probs = tf.reshape(h, [-1, self.class_count])
 
         # Loss
         clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
-        ts = lambda x: x[:, 1:] if self.class0_unknown else x
-        cost = -tf.reduce_mean(ts(target) * tf.log(ts(clipped_probs)))
+        loss = -tf.reduce_mean(target * tf.log(clipped_probs))
+
+        # Regularization
+        vars = tf.global_variables()
+        weight_vars = list(filter(lambda x: 'weights' in x.name, vars))
+        l2reg = tf.reduce_sum([tf.nn.l2_loss(w) for w in weight_vars])
+        loss += 5e-4 * l2reg
 
         # Optimization
-        optimizer = tf.train.AdamOptimizer(self.learning_rate)
-        training_step = optimizer.minimize(cost)
+        optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
+        training_step = optimizer.minimize(loss)
 
         # Dense predictions and labels
         preds, dense_labels = tf.argmax(probs, 1), tf.argmax(target, 1)
 
         # Other evaluation measures
-        self._n_accuracy = tf.reduce_mean(
+        accuracy = tf.reduce_mean(
             tf.cast(tf.equal(preds, dense_labels), tf.float32))
+
+        #writer = tf.summary.FileWriter('logs', self._sess.graph)
 
         return AbstractModel.EssentialNodes(
             input=input,
             target=target,
             probs=probs,
-            loss=cost,
+            loss=loss,
             training_step=training_step,
-            is_training=is_training)
-
-    def train(self,
-              train_data: Dataset,
-              validation_data: Dataset = None,
-              epoch_count: int = 1):
-        self._train(train_data, validation_data, epoch_count, {
-            'accuracy': self._n_accuracy
-        })
-
-    def test(self, dataset):
-        """ Override if extra fetches (maybe some evaluation measures) are needed """
-        self._test(dataset, extra_fetches={'accuracy': self._n_accuracy})
+            evaluation={
+                'accuracy': accuracy
+            })
 
 
 def main(epoch_count=1):
@@ -103,43 +98,53 @@ def main(epoch_count=1):
     from ioutil import console
 
     print("Loading and deterministically shuffling data...")
-
     data_path = os.path.join(
         ioutil.path.find_ancestor(os.path.dirname(__file__), 'projects'),
-        'datasets/iccv09')
-    ds = loaders.load_iccv09(data_path)
+        'datasets/cifar-10-batches-py')
+    ds = loaders.load_cifar10_train(data_path)
     labels = np.array([np.bincount(l.flat).argmax() for l in ds.labels])
     ds = Dataset(ds.images, labels, ds.class_count)
     ds.shuffle(order_determining_number=0.5)
+
     print("Splitting dataset...")
-    ds_trainval, ds_test = ds.split(0, int(ds.size * 0.8))
-    ds_train, ds_val = ds_trainval.split(0, int(ds_trainval.size * 0.8))
+    ds_train, ds_val = ds.split(0, int(ds.size * 0.8))
+    print(ds_train.size, ds_val.size)
+
     print("Initializing model...")
-    model = ClfBaselineA(
+    n, k = 16, 1  # n-number of weights layers, k-widening factor, (16,4), (28,10)
+    block_kind = [3, 3]
+    group_count = 3
+    blocks_per_group = (n - 1) // (group_count * len(block_kind))
+    group_lengths = [blocks_per_group] * group_count
+    model = ResNet(
         input_shape=ds.image_shape,
         class_count=ds.class_count,
-        class0_unknown=True,
-        batch_size=16,
-        learning_rate=1e-3,
-        name='ClfBaselineA-bs16',
-        training_log_period=5)
+        batch_size=128,
+        learning_rate_policy={
+            'boundaries': [60, 120, 160],
+            'values': [1e-2 * 0.2**i for i in range(4)]
+        },
+        block_kind=[3, 3],
+        group_lengths=group_lengths,
+        first_layer_width=16 * k,
+        training_log_period=50)
+    if n != model.depth:
+        print("WARNING: invalid depth (n={}!={})".format(n, model.depth))
 
     def handle_step(i):
         text = console.read_line(impatient=True, discard_non_last=True)
-        if text == 'd':
-            viz.display(ds_val, lambda im: model.predict([im])[0])
-        elif text == 'q':
+        if text == 'q':
             return True
         return False
 
     model.training_step_event_handler = handle_step
 
-    #viz = visualization.Visualizer()
     print("Starting training and validation loop...")
     #model.test(ds_val)
     for i in range(epoch_count):
         model.train(ds_train, epoch_count=1)
-        model.test(ds_val)
+        model.test(ds_val, 'validation')
+        model.test(ds_train, 'training')
     model.save_state()
 
 
