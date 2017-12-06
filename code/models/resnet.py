@@ -25,7 +25,7 @@ class ResNet(AbstractModel):
         self.completed_epoch_count = 0
         self.block_kind = block_kind
         self.group_lengths = group_lengths
-        self.depth = 1 + sum(group_lengths)*len(block_kind) + 1
+        self.depth = 1 + sum(group_lengths) * len(block_kind) + 1
         self.first_layer_width = first_layer_width
         super().__init__(
             input_shape=input_shape,
@@ -111,9 +111,9 @@ def main(epoch_count=1):
     print(ds_train.size, ds_val.size)
 
     print("Initializing model...")
-    n, k = 16, 1  # n-number of weights layers, k-widening factor, (16,4), (28,10)
+    n, k = 34, 1  # n-number of weights layers, k-widening factor, (16,4), (28,10)
     block_kind = [3, 3]
-    group_count = 3
+    group_count = 4
     blocks_per_group = (n - 1) // (group_count * len(block_kind))
     group_lengths = [blocks_per_group] * group_count
     model = ResNet(
