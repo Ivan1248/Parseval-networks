@@ -25,20 +25,18 @@ def fgs(x, preds, y=None, eps=0.3, ord=np.inf, clip_min=None, clip_max=None, tar
     :param preds: the model's output tensor (the attack expects the
         probabilities, i.e., the output of the softmax)
     :param y: A placeholder for the model labels. If targeted is true, then
-              provide the target label. Otherwise, only provide this parameter
-              if you'd like to use true labels when crafting adversarial 
-              samples. Otherwise, model predictions are used as labels to avoid
-              the "label leaking" effect (explained in this paper: 
-              https://arxiv.org/abs/1611.01236). Default is None. Labels should 
-              be one-hot-encoded.
+        provide the target label. Otherwise, only provide this parameter if
+        you'd like to use true labels when crafting adversarial samples. 
+        Otherwise, model predictions are used as labels to avoid the "label 
+        leaking" effect (explained here: https://arxiv.org/abs/1611.01236). 
+        Labels should be one-hot-encoded.
     :param eps: the epsilon (input variation parameter)
     :param ord: Order of the norm. Possible values: np.inf, 1 or 2.
     :param clip_min: Minimum float value for adversarial example components
     :param clip_max: Maximum float value for adversarial example components
     :param targeted: Is the attack targeted or untargeted? Untargeted, the
-                     default, will try to make the label incorrect. Targeted
-                     will instead try to move in the direction of being more
-                     like y.
+        default, will try to make the label incorrect. Targeted will instead try
+        to move in the direction of being more like y.
     :return: a tensor for the adversarial example
     """
     # https://github.com/tensorflow/cleverhans/blob/master/cleverhans/attacks_tf.py

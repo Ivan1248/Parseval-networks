@@ -39,7 +39,7 @@ class ResNet(AbstractModel):
             name=name)
 
     def _build_graph(self, learning_rate, epoch, is_training):
-        from tf_utils.layers import conv2d, resnet
+        from tf_utils.layers import conv, resnet
 
         # Input image and labels placeholders
         input_shape = [None] + list(self.input_shape)
@@ -52,12 +52,11 @@ class ResNet(AbstractModel):
             input,
             first_layer_width=self.first_layer_width,
             group_lengths=self.group_lengths,
-            is_training=is_training,
-            include_global_pooling=True)
+            is_training=is_training)
         h = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
 
         # Global pooling and softmax classification
-        logits = conv2d(h, 1, self.class_count)
+        logits = conv(h, 1, self.class_count)
         logits = tf.reshape(logits, [-1, self.class_count])
         probs = tf.nn.softmax(logits)
 

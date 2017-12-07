@@ -42,8 +42,6 @@ def conv(x,
     :param dilation: dilation of the kernel
     :param padding: string. "SAME" or "VALID" 
     :param bias: add biases
-    :param reuse: variable scope reuse flag
-    :param scope: variable scope name
     '''
     with var_scope(scope, 'Conv', [x], reuse=reuse):
         h = tf.nn.convolution(
@@ -61,7 +59,7 @@ def conv_transp(x,
                 ksize,
                 width,
                 output_shape,
-                stride=1,                
+                stride=1,
                 padding='SAME',
                 bias=True,
                 reuse: bool = None,
@@ -74,8 +72,6 @@ def conv_transp(x,
     :param output_shape: tuple of 2 ints
     :param padding: string. "SAME" or "VALID" 
     :param bias: add biases
-    :param reuse: variable scope reuse flag
-    :param scope: variable scope name
     '''
     with var_scope(scope, 'ConvT', [x], reuse=reuse):
         tf.nn.conv2d_transpose(
@@ -87,59 +83,6 @@ def conv_transp(x,
         if bias:
             h += bias_variable(width)
         return h
-
-
-# Convolution (old)
-
-
-def conv2d_par(x, w, b=None, stride=1, dilation=1, padding='SAME'):
-    # TODO: transposed convolution
-    transposed = type(stride) is float
-    conv = tf.nn.conv2d
-    if transposed:
-        stride_inv = 1 / stride
-        stride = int(stride_inv + 0.5)
-        if abs(stride - stride_inv) > 1e-8:
-            raise ValueError(
-                "Stride must be an integer or the multiplicative inverse of an integer."
-            )
-    if transposed:
-        x = tf.nn.conv2d_transpose(
-            x, filter=w, strides=[stride] * 2, padding=padding)
-        if dilation != 1:
-            raise ValueError(
-                "Dilation not supported for transposed convolution.")
-    else:
-        x = tf.nn.convolution(
-            x,
-            filter=w,
-            strides=[stride] * 2,
-            dilation_rate=[dilation] * 2,
-            padding=padding)
-    if b is not None:
-        x += b
-    return x
-
-
-def conv2d(x,
-           ksize,
-           width,
-           stride=1,
-           dilation=1,
-           padding='SAME',
-           bias=True,
-           return_params=False,
-           reuse: bool = None,
-           scope: str = None):
-    with var_scope(scope, 'Conv', [x], reuse=reuse):
-        w = conv_weight_variable(ksize, x.shape[-1].value, width)
-        params = [w]
-        b = None
-        if bias:
-            b = bias_variable(width)
-            params.append(b)
-        h = conv2d_par(x, w, b, stride, dilation)
-        return (h, params) if return_params else h
 
 
 # Pooling
@@ -189,17 +132,11 @@ def batch_normalization(x,
     :param x: input tensor
     :param is_training: Tensor. training indicator for batch normalization
     :param decay: exponential moving average decay
-    :param scope: variable scope name
     '''
     # https://stackoverflow.com/questions/33949786/how-could-i-use-batch-normalization-in-tensorflow
     with var_scope(scope, 'BN', [x], reuse=reuse):
-        shape = [x.shape[-1].value]
-        b = tf.get_variable(
-            'offset', shape, initializer=tf.constant_initializer(0.0))
-        s = tf.get_variable(
-            'scale', shape, initializer=tf.constant_initializer(1.0))
         m, v = tf.nn.moments(
-            x, axes=[i for i in range(len(x.shape) - 1)], name='moments')
+            x, axes=list(range(len(x.shape) - 1)), name='moments')
         ema = tf.train.ExponentialMovingAverage(decay)
 
         def mean_var_with_update():
@@ -208,7 +145,15 @@ def batch_normalization(x,
 
         mean, var = tf.cond(is_training, mean_var_with_update,
                             lambda: (ema.average(m), ema.average(v)))
-        return tf.nn.batch_normalization(x, mean, var, b, s, var_epsilon)
+        offs, scal = [
+            tf.get_variable(
+                name,
+                shape=[x.shape[-1].value],
+                trainable=False,
+                initializer=tf.constant_initializer(val))
+            for name, val in [('offset', 0.0), ('scale', 1.0)]
+        ]
+        return tf.nn.batch_normalization(x, mean, var, offs, scal, var_epsilon)
 
 
 # Blocks
@@ -219,7 +164,6 @@ def bn_relu(x,
             decay=default_arg(batch_normalization, 'decay'),
             reuse: bool = None,
             scope: str = None):
-    ''' Batch normalization followed by ReLU. '''
     with var_scope(scope, 'BNReLU', [x], reuse=reuse):
         x = batch_normalization(x, is_training)
         return tf.nn.relu(x)
@@ -242,8 +186,6 @@ def residual_block(x,
     :param first_block: needs to be set to True if this is the first residual 
         block of the whole ResNet, the first activation is omitted
     :param bn_decay: batch normalization exponential moving average decay
-    :param reuse: bool. variables defined in scope should be reused
-    :param scope: variable scope name
     '''
     with var_scope(scope, 'ResBlock', [x], reuse=reuse):
         x_width = x.shape[-1].value
@@ -276,7 +218,6 @@ def resnet(x,
            block_kind=[3, 3],
            bn_decay=default_arg(bn_relu, 'decay'),
            custom_block=None,
-           include_global_pooling=False,
            reuse: bool = None,
            scope: str = None):
     '''
@@ -289,8 +230,6 @@ def resnet(x,
     :param block_kind: kernel sizes of convolutional layers in a block
     :param bn_decay: batch normalization exponential moving average decay
     :param custom_block: a function with the same signature as residual_block 
-    :param reuse: bool. variables defined in scope should be reused
-    :param scope: variable scope name
     '''
     block = residual_block if custom_block is None else residual_block
     _bn_relu = lambda h, s: bn_relu(h, is_training, bn_decay, reuse=reuse, scope=s)
