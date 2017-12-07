@@ -45,13 +45,16 @@ class ClfBaselineA(AbstractModel):
         input = tf.placeholder(tf.float32, shape=input_shape)
         target = tf.placeholder(tf.float32, shape=output_shape)
 
-        # Downsampled input (to improve speed at the cost of accuracy)
-        h = rescale_bilinear(input, 0.5)
-
         # Hidden layers
+        h = input
+
+        convi = 0
+
         def conv_bn_relu(x, width):
-            x = conv2d(x, 3, width, bias=False)
-            x = bn_relu(x, is_training)
+            nonlocal convi
+            x = conv2d(x, 3, width, bias=False, scope='conv' + str(convi))
+            convi += 1
+            #return bn_relu(x, is_training, scope='bnrelu' + str(convi))
             return tf.nn.relu(x)
 
         h = conv_bn_relu(h, layer_width(0))
@@ -67,11 +70,11 @@ class ClfBaselineA(AbstractModel):
         # Loss
         clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
         ts = lambda x: x[:, 1:] if self.class0_unknown else x
-        cost = -tf.reduce_mean(ts(target) * tf.log(ts(clipped_probs)))
+        loss = -tf.reduce_mean(ts(target) * tf.log(ts(clipped_probs)))
 
         # Optimization
         optimizer = tf.train.AdamOptimizer(learning_rate)
-        training_step = optimizer.minimize(cost)
+        training_step = optimizer.minimize(loss)
 
         # Dense predictions and labels
         preds, dense_labels = tf.argmax(probs, 1), tf.argmax(target, 1)
@@ -116,8 +119,10 @@ def main(epoch_count=1):
         class_count=ds.class_count,
         class0_unknown=True,
         batch_size=128,
-        learning_rate_policy=1e-3,
-        name='ClfBaselineA-bs16',
+        learning_rate_policy={
+            'boundaries': [60, 120, 160],
+            'values': [5e-5 * 0.2**i for i in range(4)]
+        },        name='ClfBaselineA-bs16',
         training_log_period=100)
 
     def handle_step(i):

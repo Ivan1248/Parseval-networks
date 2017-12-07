@@ -20,9 +20,10 @@ def fgsm(x, predictions, eps=0.3, clip_min=None, clip_max=None):
 def fgs(x, preds, y=None, eps=0.3, ord=np.inf, clip_min=None, clip_max=None, targeted=False):
     """
     TensorFlow implementation of the Fast Gradient Method.
+    Source: https://github.com/tensorflow/cleverhans/blob/master/cleverhans/attacks_tf.py
     :param x: the input placeholder
     :param preds: the model's output tensor (the attack expects the
-                  probabilities, i.e., the output of the softmax)
+        probabilities, i.e., the output of the softmax)
     :param y: A placeholder for the model labels. If targeted is true, then
               provide the target label. Otherwise, only provide this parameter
               if you'd like to use true labels when crafting adversarial 
