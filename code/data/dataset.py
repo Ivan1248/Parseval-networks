@@ -10,14 +10,15 @@ from dataset_dir import load_images, load_labels, load_info
 
 class Dataset:
     """
-        TODO: rng seed, shuffle list of indices, not images -> add unshuffle function
-        alternatively, add shuffling to MiniBatchReader
+        TODO: add unshuffle
     """
 
-    def __init__(self, images, labels, class_count: int):
-        self._images = np.array(images)
-        self._labels = np.array(labels)
+    def __init__(self, images, labels, class_count: int, random_seed=51):
+        self._images = np.ascontiguousarray(np.array(images))
+        self._labels = np.ascontiguousarray(np.array(labels))
         self._class_count = class_count
+        self._rand = np.random.RandomState(random_seed)
+        self._indices = np.arange(len(self._images))
 
     def __len__(self):
         return len(self.images)
@@ -41,20 +42,23 @@ class Dataset:
     def class_count(self):
         return self._class_count
 
-    def shuffle(self, order_determining_number: float = None):
-        # TODO fix duplicate bug
-        """ Shuffles the data. """
-        self._images = [im for im in self.images
-                        ]  # duplicates appear if not list!!?
-        self._labels = [lb for lb in self.labels]
-        image_label_pairs = list(zip(self.images, self.labels))
-        if order_determining_number is None:
-            random.shuffle(image_label_pairs)
-        else:
-            random.shuffle(image_label_pairs, lambda: order_determining_number)
-        self.images[:], self.labels[:] = zip(*image_label_pairs)
-        self._images = np.array(self.images)
-        self._labels = np.array(self.labels)
+    def set_random_seed(seed:int):
+        self._rand.seed(seed)
+
+    def shuffle(self, random_seed=None):
+        indices = np.arange(self._images.shape[0])
+        self._rand.shuffle(indices)
+        arrs = [self._images, self._labels, self._indices]
+        arrs = [np.ascontiguousarray(arr[indices]) for arr in arrs]
+        self._images, self._labels, self._indices = arrs
+
+    def unshuffle(self, random_seed=None):
+        indices = np.zeros(len(self))
+        for i, k in enumerate(self._indices):
+            indices[k] = i
+        arrs = [self._images, self._labels, self._indices]
+        arrs = [np.ascontiguousarray(arr[indices]) for arr in arrs]
+        self._images, self._labels, self._indices = arrs
 
     @staticmethod
     def join(ds1, ds2):

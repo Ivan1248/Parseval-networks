@@ -8,4 +8,3 @@ def multiclass_hinge_loss(labels_oh, logits, delta=1):
     s_true = tf.reduce_sum(logits * labels_oh, axis=1, keep_dims=True)
     r = (logits - s_true + delta) * (1 - labels_oh)
     return tf.reduce_mean(tf.reduce_sum(tf.nn.relu(r), axis=1))
-

@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow.cleverhans
 import numpy as np
 
 # Original source: CleverHans - https://github.com/tensorflow/cleverhans/
@@ -20,7 +19,7 @@ def fgsm(x, predictions, eps=0.3, clip_min=None, clip_max=None):
 def fgs(x, preds, y=None, eps=0.3, ord=np.inf, clip_min=None, clip_max=None, targeted=False):
     """
     TensorFlow implementation of the Fast Gradient Method.
-    Source: https://github.com/tensorflow/cleverhans/blob/master/cleverhans/attacks_tf.py
+    Original code: https://github.com/tensorflow/cleverhans/blob/master/cleverhans/attacks_tf.py
     :param x: the input placeholder
     :param preds: the model's output tensor (the attack expects the
         probabilities, i.e., the output of the softmax)
@@ -31,7 +30,8 @@ def fgs(x, preds, y=None, eps=0.3, ord=np.inf, clip_min=None, clip_max=None, tar
         leaking" effect (explained here: https://arxiv.org/abs/1611.01236). 
         Labels should be one-hot-encoded.
     :param eps: the epsilon (input variation parameter)
-    :param ord: Order of the norm. Possible values: np.inf, 1 or 2.
+    :param ord: Order of the norm. Possible values (like in Numpy): np.inf, 1 or
+        2.
     :param clip_min: Minimum float value for adversarial example components
     :param clip_max: Maximum float value for adversarial example components
     :param targeted: Is the attack targeted or untargeted? Untargeted, the

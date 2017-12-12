@@ -66,16 +66,16 @@ class AbstractModel(object):
     def __str__(self):
         return self.name
 
-    def save_state(self, file_path, save_log=True):
+    def save_state(self, path, save_log=True):
         """
             Saves the trained model as `file_path`.
             If `save_log == True`, `self.log` is saved as `file_path`+'.log'.
         """
-        file_path = os.path.join(file_path, str(self))
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
+        file_path = os.path.join(path, str(self))
+        if not os.path.exists(path):
+            os.makedirs(path)
         self._saver.save(self._sess, file_path)
-        with open(path + ".log", mode='w') as fs:
+        with open(file_path + ".log", mode='w') as fs:
             fs.write("\n".join(self.log))
             fs.flush()
         print("State saved as '" + file_path + "'.")

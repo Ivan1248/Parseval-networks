@@ -1,5 +1,7 @@
 import numpy as np
-import skimage, matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # /*
 import matplotlib as mpl
 
@@ -30,3 +32,39 @@ def compose(images, format='0,0;1,0-1'):
     return np.concatenate([
         np.concatenate([get_image(frc) for frc in frow], 1) for frow in format
     ], 0)
+
+
+class Viewer:
+    """
+        Press "q" to close the window. Press anything else to change the displayed
+        composite image. Press "a" to return to the previous image.
+    """
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def display(self, data, mapping=lambda x: x):
+        import matplotlib as mpl
+        mpl.use('wxAgg')
+
+        i = 0
+
+        def on_press(event):
+            nonlocal i
+            if event.key == 'a':
+                i -= 1
+            elif event.key == 'q':
+                plt.close(event.canvas.figure)
+                return
+            else:
+                i += 1
+            i = i % data.size
+            imgplot.set_data(mapping(data[i]))
+            fig.canvas.set_window_title(str(i))
+            fig.canvas.draw()
+
+        fig, ax = plt.subplots()
+        fig.canvas.mpl_connect('key_press_event', on_press)
+        fig.canvas.set_window_title('0')
+        imgplot = ax.imshow(mapping(data[0]))
+        plt.show()

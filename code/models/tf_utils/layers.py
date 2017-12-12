@@ -89,13 +89,15 @@ def conv_transp(x,
 
 
 def max_pool(x, stride, ksize=None, padding='SAME'):
-    if ksize is None: ksize = stride
+    if ksize is None:
+        ksize = stride
     return tf.nn.max_pool(x, [1, ksize, ksize, 1], [1, stride, stride, 1],
                           padding)
 
 
 def avg_pool(x, stride, ksize=None, padding='SAME'):
-    if ksize is None: ksize = stride
+    if ksize is None:
+        ksize = stride
     return tf.nn.avg_pool(x, [1, ksize, ksize, 1], [1, stride, stride, 1],
                           padding)
 
@@ -169,43 +171,79 @@ def bn_relu(x,
         return tf.nn.relu(x)
 
 
+class ResidualBlockKind:
+
+    def __init__(self,
+                 ksizes=[3, 3],
+                 dropout_locations=[],
+                 dropout_rate=0.3,
+                 dim_increase='id'):
+        '''
+        A ResNet full pre-activation residual block with a (padded) identity 
+        shortcut.
+        :param ksizes: list of ints or int pairs. kernel sizes of convolutional 
+            layers
+        :param dropout_locations: indexes of convolutional layers after which
+            dropout is to be applied
+        :param dropout_rate: int
+        :param dim_increase: string. 'id' for identity with zero padding or 
+            'conv1' for projection with a 1×1 convolution with stride 2. See 
+            section 3.3. in https://arxiv.org/abs/1512.03385. Alternatively, it 
+            can also be set to 'conv3' for a 3×3 convolution with stride 2. 
+        '''
+        self.ksizes = ksizes
+        self.dropout_locations = dropout_locations
+        self.dropout_rate = dropout_rate
+        if dim_increase not in ['id', 'conv1', 'conv3']:
+            raise ValueError("dim_increase must be 'id', 'conv1' or 'conv'")
+        self.dim_increase = dim_increase
+
+
 def residual_block(x,
                    is_training,
-                   kind=[3, 3],
-                   double_dim=False,
+                   kind=ResidualBlockKind([3, 3]),
+                   width=16,
                    first_block=False,
-                   bn_decay=default_arg(bn_relu, 'decay'),
+                   bn_decay=default_arg(batch_normalization, 'decay'),
                    reuse: bool = None,
                    scope: str = None):
     '''
-    A ResNet full pre-activation residual block.
+    A generic ResNet full pre-activation residual block.
     :param x: input tensor
-    :param is_training: Tensor. training indicator for batch normalization
-    :param kind: kernel sizes of convolutional layers
-    :param double_dim: if True, stride of conv1 is set to 2 and width is doubled
+    :param is_training: Tensor. training indicator for batch normalization    
+    :param kind: a ResidualBlockKind instance
+    :param width: number of output channels
+    :param bn_decay: batch normalization exponential moving average decay
     :param first_block: needs to be set to True if this is the first residual 
         block of the whole ResNet, the first activation is omitted
-    :param bn_decay: batch normalization exponential moving average decay
     '''
+    dropout = tf.layers.dropout
+
+    def _bn_relu(x, name):
+        sc = 'bn_relu' + name
+        return bn_relu(x, is_training, decay=bn_decay, reuse=reuse, scope=sc)
+
+    def _conv(x, ksize, stride, name):
+        sc = 'conv' + name
+        return conv(x, ksize, width, stride, bias=False, reuse=reuse, scope=sc)
+
+    x_width = x.shape[-1].value
+    dim_increase = width > x_width
     with var_scope(scope, 'ResBlock', [x], reuse=reuse):
-        x_width = x.shape[-1].value
-        width = x_width * 2 if double_dim else x_width
-
         r = x
-        if not first_block:
-            r = bn_relu(r, is_training, decay=bn_decay, scope='bn_relu0')
-        stride = 2 if double_dim else 1
-        r = conv(r, kind[0], width, stride=stride, bias=False, scope='conv0')
-        for i, ksize in zip(range(1, len(kind)), kind[1:]):
-            r = bn_relu(
-                r, is_training, decay=bn_decay, scope='bn_relu' + str(i))
-            r = conv(r, ksize, width, bias=False, scope='conv' + str(i))
-
-        if double_dim:  # https://github.com/wenxinxu/resnet-in-tensorflow/blob/master/resnet.py
-            x = avg_pool(x, 2, padding='VALID')  # TODO: check
-            x = tf.pad(x, [[0, 0], [0, 0], [0, 0], [x_width // 2] * 2])
-
-        return x + r  # the last block needs to be followed by bn_relu
+        for i, ksize in enumerate(kind.ksizes):
+            r = _bn_relu(r, str(i)) if not (first_block and i == 0) else r
+            r = _conv(r, ksize, 1 + int(dim_increase and i == 0), str(i))
+            if i in kind.dropout_locations:
+                r = dropout(r, kind.dropout_rate, training=is_training)
+        if dim_increase:
+            if kind.dim_increase == 'id':
+                x = avg_pool(x, 2, padding='VALID')
+                x = tf.pad(x, 3 * [[0, 0]] + [[0, width - x_width]])
+            elif kind.dim_increase in ['conv1', 'conv3']:
+                x = _bn_relu(x, 'skip')  # TODO: check
+                x = _conv(x, int(kind.dim_increase[-1]), 2, 'skip')
+        return x + r
 
 
 # Components
@@ -213,10 +251,11 @@ def residual_block(x,
 
 def resnet(x,
            is_training,
-           first_layer_width,
-           group_lengths,
-           block_kind=[3, 3],
-           bn_decay=default_arg(bn_relu, 'decay'),
+           base_width=16,
+           widening_factor=1,
+           group_lengths=[2, 2, 2],
+           block_kind=default_arg(residual_block, 'kind'),
+           bn_decay=default_arg(batch_normalization, 'decay'),
            custom_block=None,
            reuse: bool = None,
            scope: str = None):
@@ -225,8 +264,10 @@ def resnet(x,
     classification layers.
     :param x: input tensor
     :param is_training: Tensor. training indicator for batch normalization
-    :param first_layer_width: number of output channels of the first layer
-    :param group_lengths: numbers of blocks per group (width)
+    :param base_width: number of output channels of the first layer
+    :param widening_factor: (k) block widths are proportional to 
+        base_width*widening_factor
+    :param group_lengths: (N) numbers of blocks per group (width)
     :param block_kind: kernel sizes of convolutional layers in a block
     :param bn_decay: batch normalization exponential moving average decay
     :param custom_block: a function with the same signature as residual_block 
@@ -234,16 +275,17 @@ def resnet(x,
     block = residual_block if custom_block is None else residual_block
     _bn_relu = lambda h, s: bn_relu(h, is_training, bn_decay, reuse=reuse, scope=s)
     with var_scope(scope, 'ResNet', [x], reuse=reuse):
-        h = conv(x, 3, first_layer_width, bias=False)
+        h = conv(x, 3, base_width, bias=False)
         h = _bn_relu(h, 'BNReLU0')
         for i, length in enumerate(group_lengths):
+            group_width = base_width * widening_factor * (i + 1)
             with tf.variable_scope('group' + str(i), reuse=False):
                 for j in range(length):
                     h = block(
                         h,
                         is_training=is_training,
                         kind=block_kind,
-                        double_dim=i != 0 and j == 0,
+                        width=group_width,
                         first_block=i == 0 and j == 0,
                         bn_decay=bn_decay,
                         reuse=reuse,
