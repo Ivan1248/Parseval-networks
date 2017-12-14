@@ -126,12 +126,12 @@ class ClfBaselineB(AbstractModel):
 def main(epoch_count=1):
     from data import Dataset, loaders
     from data.preparers import Iccv09Preparer
-    import ioutil
-    from ioutil import console
+    import ioutils
+    from ioutils import console
 
     print("Loading and deterministically shuffling data...")
     data_path = os.path.join(
-        ioutil.path.find_ancestor(os.path.dirname(__file__), 'projects'),
+        ioutils.path.find_ancestor(os.path.dirname(__file__), 'projects'),
         'datasets/cifar-10-batches-py')
     ds = loaders.load_cifar10_train(data_path)
     labels = np.array([np.bincount(l.flat).argmax() for l in ds.labels])

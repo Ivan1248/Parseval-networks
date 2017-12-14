@@ -14,7 +14,7 @@ from abstract_model import AbstractModel
 from tf_utils import layers
 
 
-class ResNet(AbstractModel):
+class RBFResNet(AbstractModel):
 
     def __init__(self,
                  input_shape,
@@ -45,7 +45,7 @@ class ResNet(AbstractModel):
             name=name)
 
     def _build_graph(self, learning_rate, epoch, is_training):
-        from layers import conv, resnet
+        from layers import conv, rbf_resnet
 
         # Input image and labels placeholders
         input_shape = [None] + list(self.input_shape)
@@ -54,7 +54,7 @@ class ResNet(AbstractModel):
         target = tf.placeholder(tf.float32, shape=output_shape)
 
         # Hidden layers
-        h = resnet(
+        h = rbf_resnet(
             input,
             base_width=self.base_width,
             widening_factor=self.widening_factor,

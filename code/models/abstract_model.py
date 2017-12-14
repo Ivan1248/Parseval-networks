@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # semseg/*
 import data
 from data import Dataset, MiniBatchReader
 from processing.labels import one_hot_to_dense, dense_to_one_hot
-from ioutil import file
+from ioutils import file
 
 
 class AbstractModel(object):

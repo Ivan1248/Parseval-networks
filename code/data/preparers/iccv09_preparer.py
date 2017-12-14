@@ -5,7 +5,7 @@ import numpy as np
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))  # semseg/*
 from processing.shape import adjust_shape
-from ioutil import path, directory
+from ioutils import path, directory
 
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # data/*

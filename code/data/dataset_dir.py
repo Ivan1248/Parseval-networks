@@ -6,7 +6,7 @@ import numpy as np
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # semseg/*
-from ioutil import directory, file
+from ioutils import directory, file
 
 IMAGE_EXT = '.png'
 LABELING_EXT = '.lab'
