@@ -15,16 +15,17 @@ def find_ancestor(path, ancestor_name):
         str.join(os.sep, components[:components.index(ancestor_name) + 1]))
 
 
-def find_ancestor_sibling(path, ancestor_sibling_name):
+def find_in_ancestor(path, ancestor_sibling_name):
     """ 
-    ancestor_sibling_name can be the name of a sibling directory to some
-    ancestor, but it can be a descendant of the sibling as well 
+    `ancestor_sibling_name` can be the name of a sibling directory (or some
+    descendant of the sibling) to some ancestor of `path`, but it can also be a 
+    descendant of the sibling 
     """
     components = os.path.abspath(path).split(os.sep)
     while len(components) > 0:
         path = os.path.normpath(
             str.join(os.sep, components + [ancestor_sibling_name]))
-        if os.path.isdir(path):
+        if os.path.exists(path):
             return path
         components.pop()
     assert False, "No ancestor sibling found"

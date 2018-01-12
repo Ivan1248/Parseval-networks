@@ -2,13 +2,13 @@ import tensorflow as tf
 
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # /*
-sys.path.append(os.path.dirname(__file__))  # /models/
+#sys.path.append(os.path.dirname(__file__))  # /models/
 
-from abstract_model import AbstractModel
-from tf_utils import layers, layers_exp, regularization
+from .abstract_model import AbstractModel
+from .tf_utils import layers, regularization, update_ops
 
 
-class RBFResNet(AbstractModel):
+class ParsevalResNet(AbstractModel):
 
     def __init__(self,
                  input_shape,
@@ -20,9 +20,11 @@ class RBFResNet(AbstractModel):
                  base_width=16,
                  widening_factor=1,
                  weight_decay=5e-4,
+                 ortho_retraction_rate=3e-4,
                  training_log_period=1,
                  name='ResNet'):
         self.completed_epoch_count = 0
+        assert block_properties.aggregation == 'convex'
         self.block_properties = block_properties
         self.group_lengths = group_lengths
         self.depth = 1 + sum(group_lengths) * len(block_properties.ksizes) + 1
@@ -30,6 +32,7 @@ class RBFResNet(AbstractModel):
         self.base_width = base_width
         self.widening_factor = widening_factor
         self.weight_decay = weight_decay
+        self.ortho_retraction_rate = ortho_retraction_rate
         super().__init__(
             input_shape=input_shape,
             class_count=class_count,
@@ -39,7 +42,16 @@ class RBFResNet(AbstractModel):
             name=name)
 
     def _build_graph(self, learning_rate, epoch, is_training):
-        from layers import conv
+        import layers
+        original_conv = layers.conv
+
+        def parseval_replacement_conv(*args, **kwargs):
+            ksize = args[1]
+            h = original_conv(*args, **kwargs)
+            return h / ksize**2
+
+        ## WARNING - replaces the original layers.conv with replacement_conv
+        layers.conv = parseval_replacement_conv
 
         # Input image and labels placeholders
         input_shape = [None] + list(self.input_shape)
@@ -48,26 +60,32 @@ class RBFResNet(AbstractModel):
         target = tf.placeholder(tf.float32, shape=output_shape)
 
         # Hidden layers
-        h = layers_exp.rbf_resnet(
+        h = layers.resnet(
             input,
             is_training=is_training,
             base_width=self.base_width,
             widening_factor=self.widening_factor,
-            group_lengths=self.group_lengths)
+            group_lengths=self.group_lengths,
+            block_properties=self.block_properties,
+            bn_offset_scale=(True, False))  # TODO
 
         # Global pooling and softmax classification
         h = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
-        logits = conv(h, 1, self.class_count)
+        logits = layers.conv(h, 1, self.class_count)
         logits = tf.reshape(logits, [-1, self.class_count])
         probs = tf.nn.softmax(logits)
+
+        ## IMPORTANT - restores the original layers.conv with replacement_conv
+        layers.conv = original_conv
 
         # Loss
         clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
         loss = -tf.reduce_mean(target * tf.log(clipped_probs))
 
         # Regularization
-        w_vars = filter(lambda x: 'weights' in x.name, tf.global_variables())
-        loss += self.weight_decay*regularization.l2_regularization(w_vars)
+        w_vars = list(
+            filter(lambda x: 'weights' in x.name, tf.global_variables()))
+        loss += self.weight_decay * regularization.l2_regularization(w_vars)
 
         # Optimization
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
@@ -88,4 +106,6 @@ class RBFResNet(AbstractModel):
             probs=probs,
             loss=loss,
             training_step=training_step,
+            training_post_step=update_ops.ortho_retraction_step(
+                w_vars, self.ortho_retraction_rate),
             evaluation={'accuracy': accuracy})

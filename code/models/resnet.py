@@ -1,17 +1,11 @@
-import datetime
-import numpy as np
-import os
 import tensorflow as tf
-from tensorflow.python.framework import ops
 
-import sys
+import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # /*
-sys.path.append(os.path.dirname(__file__))  # /models/
-from data import Dataset, MiniBatchReader
-from ioutils import path
+#sys.path.append(os.path.dirname(__file__))  # /models/
 
-from abstract_model import AbstractModel
-from tf_utils import layers
+from .abstract_model import AbstractModel
+from .tf_utils import layers, regularization
 
 
 class ResNet(AbstractModel):
@@ -21,17 +15,17 @@ class ResNet(AbstractModel):
                  class_count,
                  batch_size=128,
                  learning_rate_policy=1e-2,
-                 block_kind=layers.ResidualBlockKind([3, 3]),
+                 block_properties=layers.ResidualBlockProperties([3, 3]),
                  group_lengths=[3, 3, 3],
                  base_width=16,
                  widening_factor=1,
-                 weight_decay=1e-4,
+                 weight_decay=5e-4,
                  training_log_period=1,
                  name='ResNet'):
-        self.completed_epoch_count = 0
-        self.block_kind = block_kind
+        self.completed_epoch_count = 0  # TODO: remove
+        self.block_properties = block_properties
         self.group_lengths = group_lengths
-        self.depth = 1 + sum(group_lengths) * len(block_kind.ksizes) + 1
+        self.depth = 1 + sum(group_lengths) * len(block_properties.ksizes) + 1
         self.zagoruyko_depth = self.depth - 1 + len(group_lengths)
         self.base_width = base_width
         self.widening_factor = widening_factor
@@ -56,10 +50,11 @@ class ResNet(AbstractModel):
         # Hidden layers
         h = resnet(
             input,
+            is_training=is_training,
             base_width=self.base_width,
             widening_factor=self.widening_factor,
             group_lengths=self.group_lengths,
-            is_training=is_training)
+            block_properties=self.block_properties)
 
         # Global pooling and softmax classification
         h = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
@@ -72,10 +67,8 @@ class ResNet(AbstractModel):
         loss = -tf.reduce_mean(target * tf.log(clipped_probs))
 
         # Regularization
-        vars = tf.global_variables()
-        weight_vars = filter(lambda x: 'weights' in x.name, vars)
-        l2reg = tf.reduce_sum(list(map(tf.nn.l2_loss, weight_vars)))
-        loss += self.weight_decay * l2reg
+        w_vars = filter(lambda x: 'weights' in x.name, tf.global_variables())
+        loss += self.weight_decay * regularization.l2_regularization(w_vars)
 
         # Optimization
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
@@ -96,6 +89,4 @@ class ResNet(AbstractModel):
             probs=probs,
             loss=loss,
             training_step=training_step,
-            evaluation={
-                'accuracy': accuracy
-            })
+            evaluation={'accuracy': accuracy})

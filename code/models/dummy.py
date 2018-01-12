@@ -11,19 +11,15 @@ from data import Dataset, MiniBatchReader
 from .abstract_model import AbstractModel
 
 
-class BaselineA(AbstractModel):
+class Dummy(AbstractModel):
     def __init__(self,
                  input_shape,
                  class_count,
-                 class0_unknown=False,
                  batch_size=32,
                  conv_layer_count=4,
                  learning_rate_policy=1e-3,
                  training_log_period=1,
-                 name='ClfBaselineA'):
-        self.conv_layer_count = conv_layer_count
-        self.completed_epoch_count = 0
-        self.class0_unknown = class0_unknown
+                 name='Dummy'):
         super().__init__(
             input_shape=input_shape,
             class_count=class_count,
@@ -48,29 +44,14 @@ class BaselineA(AbstractModel):
         # Hidden layers
         h = input
 
-        convi = 0
-
-        def conv_bn_relu(x, width):
-            nonlocal convi
-            x = conv(x, 3, width, bias=False, scope='conv' + str(convi))
-            convi += 1
-            #return bn_relu(x, is_training, scope='bnrelu' + str(convi))
-            return tf.nn.relu(x)
-
-        h = conv_bn_relu(h, layer_width(0))
-        for l in range(1, self.conv_layer_count):
-            h = max_pool(h, 2)
-            h = conv_bn_relu(h, layer_width(l))
-
         # Global pooling and softmax classification
-        h = conv(h, 1, self.class_count)
+        h = conv(h, 3, self.class_count)
         logits = tf.reduce_mean(h, axis=[1, 2])
         probs = tf.nn.softmax(logits)
 
         # Loss
         clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
-        ts = lambda x: x[:, 1:] if self.class0_unknown else x
-        loss = -tf.reduce_mean(ts(target) * tf.log(ts(clipped_probs)))
+        loss = -tf.reduce_mean(target * tf.log(clipped_probs))
 
         # Optimization
         optimizer = tf.train.AdamOptimizer(learning_rate)

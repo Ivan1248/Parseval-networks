@@ -1,6 +1,10 @@
 import tensorflow as tf
 
 
+def l2_regularization(weight_vars):
+    return tf.reduce_sum(list(map(tf.nn.l2_loss, weight_vars)))
+
+
 def orthogonality_penalty(weights):
     """
     A loss that penalizes non-orthogonal matrices. 

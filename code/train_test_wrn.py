@@ -5,8 +5,12 @@ if len(dimargs) not in [0, 2]:
 zaggydepth, k = (16, 4) if len(dimargs) == 0 else map(int, dimargs)
 
 print("Loading and preparing data...")
+from data import Dataset
 from data_utils import Cifar10Loader
 ds_train, ds_val = Cifar10Loader.load_train_val()
+ds_train = Dataset.join(ds_train, ds_val)
+ds_test = Cifar10Loader.load_test()
+
 
 print("Initializing model...")
 from models import ResidualBlockProperties, ResNet
@@ -45,10 +49,10 @@ model = get_wide_resnet(
 
 print("Starting training and validation loop...")
 from training import train
-train(model, ds_train, ds_val, epoch_count=200)
+train(model, ds_train, ds_test, epoch_count=200)
 
 print("Saving model...")
 import datetime
 import dirs
-model.save_state(dirs.SAVED_MODELS + '/wrn-%d-%d.' % (zaggydepth, k) +
+model.save_state(dirs.SAVED_MODELS + '/wrnt-%d-%d.' % (zaggydepth, k) +
                  datetime.datetime.now().strftime("%Y-%m-%d-%H-%M"))

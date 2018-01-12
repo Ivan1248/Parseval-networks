@@ -9,15 +9,15 @@ from data_utils import Cifar10Loader
 ds_train, ds_val = Cifar10Loader.load_train_val()
 
 print("Initializing model...")
-from models import ResidualBlockKind, RBFResNet
+from models import ResidualBlockProperties, RBFResNet
 def get_wide_resnet(n, k, input_shape, class_count, dim_increase='id'):
-    block_kind = ResidualBlockKind(
+    block_properties = ResidualBlockProperties(
         ksizes=[3, 3],
         dropout_locations=[0],
         dropout_rate=0.3,
         dim_increase=dim_increase)
     group_count = 3
-    blocks_per_group = (n - 4) // (group_count * len(block_kind.ksizes))
+    blocks_per_group = (n - 4) // (group_count * len(block_properties.ksizes))
     print("group count: {}, blocks per group: {}".format(
         group_count, blocks_per_group))
     model = RBFResNet(
@@ -28,7 +28,7 @@ def get_wide_resnet(n, k, input_shape, class_count, dim_increase='id'):
             'boundaries': [10, 60, 100, 140],
             'values': [1e-0 * 0.2**i for i in range(4)]
         },
-        block_kind=block_kind,
+        block_properties=block_properties,
         group_lengths=[blocks_per_group] * group_count,
         widening_factor=k,
         weight_decay=5e-4,
