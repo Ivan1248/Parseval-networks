@@ -6,6 +6,7 @@ ds_test = Cifar10Loader.load_test()[:200]
 
 print("Initializing model...")
 from models import Dummy
+from training import train
 
 get_model = lambda: Dummy(
     input_shape=ds_test.image_shape,
@@ -13,24 +14,34 @@ get_model = lambda: Dummy(
     batch_size=1,
     training_log_period=100)
 
-import tensorflow as tf
-model=get_model()
 
-for i in range(3):
+saved_path = None
 
-    print("Starting training and validation loop...")
-    from training import train
-    train(model, ds_test, ds_test, epoch_count=2)
+def load_save():
+    import tensorflow as tf
+    global saved_path
 
-    print("Saving model...")
-    import datetime
-    import dirs
-    save_path = dirs.SAVED_MODELS + '/dummy.' + datetime.datetime.now().strftime(
-        "%Y-%m-%d")
-    load_path=model.save_state(save_path)
-
-    del(model)
     model = get_model()
 
-    print("Loading model...")
-    model.load_state(load_path)
+    if saved_path is not None:
+        print("Loading model...")
+        print(saved_path)
+        model.load_state(saved_path)
+        print(saved_path)
+
+    print("Starting training and validation loop...")
+    train(model, ds_test, ds_test, epoch_count=2)
+    
+    if saved_path is None:
+        print("Saving model...")
+        import datetime
+        import dirs
+        saved_path = dirs.SAVED_MODELS + '/dummy-' + datetime.datetime.now(
+        ).strftime("%Y-%m-%d")+"-ckpt"
+        saved_path = model.save_state(saved_path)
+        print(saved_path)
+
+
+for i in range(4):
+    print([i]*50)
+    load_save()

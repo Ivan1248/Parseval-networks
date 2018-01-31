@@ -10,8 +10,8 @@ def conv_weight_variable(ksize,
         ksize = [ksize, ksize]
     shape = list(ksize) + [in_channels, out_channels]
     maxval = (6 / (ksize[0] * ksize[1] * in_channels + out_channels))**0.5
-    initilaizer = tf.random_uniform_initializer(-maxval, maxval)
-    return tf.get_variable(name, shape=shape, initializer=initilaizer)
+    initializer = tf.random_uniform_initializer(-maxval, maxval)
+    return tf.get_variable(name, shape=shape, initializer=initializer)
 
 
 def bias_variable(n: int, initial_value=0.05, name='biases'):

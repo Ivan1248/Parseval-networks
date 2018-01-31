@@ -1,0 +1,26 @@
+\babel@toc {croatian}{}
+\contentsline {chapter}{\numberline {1}Uvod}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Rizik kod nadziranog u\IeC {\v c}enja}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Neprijateljski primjeri}{1}{section.1.2}
+\contentsline {paragraph}{Pronala\IeC {\v z}enje neprijateljskih primjera}{1}{section*.3}
+\contentsline {paragraph}{Neprijateljski rizik.}{3}{section*.4}
+\contentsline {paragraph}{U\IeC {\v c}enje s neprijateljskim primjerima}{3}{section*.5}
+\contentsline {chapter}{\numberline {2}Parsevalove mre\IeC {\v z}e}{4}{chapter.2}
+\contentsline {section}{\numberline {2.1}Ograni\IeC {\v c}avanje neprijateljskog rizika Lipschitzovom konstantom}{4}{section.2.1}
+\contentsline {section}{\numberline {2.2}Lipschitzova konstanta neuronske mre\IeC {\v z}e}{6}{section.2.2}
+\contentsline {paragraph}{Sloj linearnog preslikavanja.}{6}{section*.6}
+\contentsline {paragraph}{Konvolucijski sloj.}{6}{section*.7}
+\contentsline {paragraph}{Aktivacijski sloj.}{7}{section*.8}
+\contentsline {paragraph}{Linearna kombinacija izlaza razli\IeC {\v c}itih slojeva.}{7}{section*.9}
+\contentsline {section}{\numberline {2.3}Parsevalove mre\IeC {\v z}e}{7}{section.2.3}
+\contentsline {paragraph}{Ortogonalnost matrica te\IeC {\v z}ina}{7}{section*.10}
+\contentsline {paragraph}{Ograni\IeC {\v c}enje konveksnosti linearne kombinacije}{8}{section*.11}
+\contentsline {section}{\numberline {2.4}Rezultati}{8}{section.2.4}
+\contentsline {chapter}{\numberline {3}Programsko ostvarenje i rezultati}{11}{chapter.3}
+\contentsline {section}{\numberline {3.1}Razlike u odnosu na modele koje su autori koristili}{11}{section.3.1}
+\contentsline {section}{\numberline {3.2}Rezultati.}{12}{section.3.2}
+\contentsline {paragraph}{Brzina u\IeC {\v c}enja i rezultati evaluacije}{12}{section*.14}
+\contentsline {paragraph}{Otpornost na neprijateljske primjere}{12}{section*.16}
+\contentsline {chapter}{\numberline {4}Literatura}{16}{chapter.4}
+\contentsline {chapter}{\numberline {A}Konfiguracija rezidualnih mre\IeC {\v z}a}{18}{appendix.A}
+\contentsline {chapter}{\numberline {B}Ostali rezultati}{19}{appendix.B}

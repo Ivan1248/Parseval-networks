@@ -74,8 +74,8 @@ class AbstractModel(object):
 
     def __del__(self):  # I am not sure whether this is good
         self._sess.close()
-        with self._graph.as_default():
-            tf.reset_default_graph()
+        #with self._graph.as_default():
+        #    tf.reset_default_graph()
 
     def __str__(self):
         return self.name

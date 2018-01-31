@@ -55,14 +55,15 @@ def conv(x,
         return h
 
 
-def conv_transp(x,
-                ksize,
-                output_shape, # TODO: width+output_stride
-                stride=1,
-                padding='SAME',
-                bias=True,
-                reuse: bool = None,
-                scope: str = None):
+def conv_transp(
+        x,
+        ksize,
+        output_shape,  # TODO: width+output_stride
+        stride=1,
+        padding='SAME',
+        bias=True,
+        reuse: bool = None,
+        scope: str = None):
     '''
     A wrapper for tf.nn.tf.nn.conv2d_transpose.
     :param x: 4D input "NHWC" tensor 
@@ -125,7 +126,7 @@ def rescale_bilinear(x, factor):
 def batch_normalization(x,
                         is_training,
                         offset_scale=(True, True),
-                        decay=0.0,
+                        decay=0.95,
                         var_epsilon=1e-8,
                         reuse: bool = None,
                         scope: str = None):
@@ -136,9 +137,10 @@ def batch_normalization(x,
     :param decay: exponential moving average decay
     '''
     with var_scope(scope, 'BN', [x], reuse=reuse):
+        ema = tf.train.ExponentialMovingAverage(decay)
+
         m, v = tf.nn.moments(
             x, axes=list(range(len(x.shape) - 1)), name='moments')
-        ema = tf.train.ExponentialMovingAverage(decay)
 
         def m_v_with_update():
             with tf.control_dependencies([ema.apply([m, v])]):
@@ -146,17 +148,18 @@ def batch_normalization(x,
 
         mean, var = tf.cond(is_training, m_v_with_update,
                             lambda: (ema.average(m), ema.average(v)))
-        mean, var = m,v
 
-        offs = 0.0 if not offset_scale[0] else tf.get_variable(
+        offset = 0.0 if not offset_scale[0] else tf.get_variable(
             'offset',
             shape=[x.shape[-1].value],
             initializer=tf.constant_initializer(0.0))
-        scal = 1.0 if not offset_scale[1] else tf.get_variable(
+        scale = 1.0 if not offset_scale[1] else tf.get_variable(
             'scale',
             shape=[x.shape[-1].value],
             initializer=tf.constant_initializer(1.0))
-        return tf.nn.batch_normalization(x, mean, var, offs, scal, var_epsilon)
+
+        return tf.nn.batch_normalization(x, mean, var, offset, scale,
+                                         var_epsilon)
 
 
 # Blocks
@@ -186,6 +189,7 @@ def convex_combination(x, r, is_training, reuse: bool = None,
                 return tf.identity(a)
 
         a = tf.cond(is_training, a_with_update, lambda: a)
+        #a = tf.Print(a,[a, a.name])
         return a * x + (1 - a) * r
 
 
@@ -209,17 +213,16 @@ class ResidualBlockProperties:
             convex combination as in Parseval networks
         :param dim_increase: string. 'id' for identity with zero padding or 
             'conv1' for projection with a 1×1 convolution with stride 2. See 
-            section 3.3. in https://arxiv.org/abs/1512.03385. Alternatively, it 
-            can also be set to 'conv3' for a 3×3 convolution with stride 2. 
+            section 3.3. in https://arxiv.org/abs/1512.03385.
         '''
         self.ksizes = ksizes
         self.dropout_locations = dropout_locations
         self.dropout_rate = dropout_rate
-        if dim_increase not in ['id', 'conv1', 'conv3']:
-            raise ValueError("dim_increase must be 'id', 'conv1' or 'conv'")
+        if dim_increase not in ['id', 'conv1']:
+            raise ValueError("dim_increase must be 'id' or 'conv1'")
         self.dim_increase = dim_increase
         if aggregation not in ['sum', 'convex']:
-            raise ValueError("dim_increase must be 'id', 'conv1' or 'conv'")
+            raise ValueError("aggregation must be 'sum' or 'convex'")
         self.aggregation = aggregation
 
 
@@ -227,7 +230,7 @@ def residual_block(x,
                    is_training,
                    properties=ResidualBlockProperties([3, 3]),
                    width=16,
-                   first_block=False,
+                   stride=1,
                    bn_offset_scale=(True, True),
                    bn_decay=default_arg(batch_normalization, 'decay'),
                    reuse: bool = None,
@@ -257,24 +260,27 @@ def residual_block(x,
             x, ksize, width, stride, bias=False, reuse=reuse, scope='conv' + id)
 
     x_width = x.shape[-1].value
-    dim_increase = width > x_width
+    assert width >= x_width
     with var_scope(scope, 'ResBlock', [x], reuse=reuse):
+        xb = _bn_relu(x, 'in')  # <- note this
         # residual
-        r = x
+        r = xb
         for i, ksize in enumerate(properties.ksizes):
-            r = _bn_relu(r, str(i)) if not (first_block and i == 0) else r
-            r = _conv(r, ksize, 1 + int(dim_increase and i == 0), str(i))
+            if i > 0:
+                r = _bn_relu(r, str(i))
+            r = _conv(r, ksize, stride if i == 0 else 1, str(i))
             if i in properties.dropout_locations:
-                rate = properties.dropout_rate
-                r = tf.layers.dropout(r, rate, training=is_training)
+                r = tf.layers.dropout(
+                    r, properties.dropout_rate, training=is_training)
         # dimension increase
-        if dim_increase:
+        if width > x_width or stride > 1:
             if properties.dim_increase == 'id':
-                x = avg_pool(x, 2, padding='VALID')
+                if stride > 1:
+                    x = avg_pool(x, stride, padding='VALID')
                 x = tf.pad(x, 3 * [[0, 0]] + [[0, width - x_width]])
-            elif properties.dim_increase in ['conv1', 'conv3']:
-                x = _bn_relu(x, 'skip')  # TODO: check
-                x = _conv(x, int(properties.dim_increase[-1]), 2, 'skip')
+            elif properties.dim_increase == 'conv1':
+                x = _conv(xb, 1, stride, 'skip')
+        print(scope, x.shape, r.shape)
         # aggregation
         if properties.aggregation == 'sum':
             return x + r
@@ -297,7 +303,7 @@ def resnet(x,
            reuse: bool = None,
            scope: str = None):
     '''
-    A pre-activation resnet without final global pooling and 
+    A pre-activation resnet without the final global pooling and 
     classification layers.
     :param x: input tensor
     :param is_training: Tensor. training indicator for batch normalization
@@ -319,9 +325,8 @@ def resnet(x,
 
     with var_scope(scope, 'ResNet', [x], reuse=reuse):
         h = conv(x, 3, base_width, bias=False)
-        h = _bn_relu(h, '0')
         for i, length in enumerate(group_lengths):
-            group_width = base_width * widening_factor * (i + 1)
+            group_width = 2**i * base_width * widening_factor
             with tf.variable_scope('group' + str(i), reuse=False):
                 for j in range(length):
                     h = residual_block(
@@ -329,7 +334,7 @@ def resnet(x,
                         is_training=is_training,
                         properties=block_properties,
                         width=group_width,
-                        first_block=i == j == 0,
+                        stride=1 + int(i > 0 and j == 0),
                         bn_offset_scale=bn_offset_scale,
                         bn_decay=bn_decay,
                         reuse=reuse,

@@ -63,8 +63,9 @@ class ResNet(AbstractModel):
         probs = tf.nn.softmax(logits)
 
         # Loss
-        clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
-        loss = -tf.reduce_mean(target * tf.log(clipped_probs))
+        loss = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(
+                labels=target, logits=logits))
 
         # Regularization
         w_vars = filter(lambda x: 'weights' in x.name, tf.global_variables())
@@ -72,10 +73,11 @@ class ResNet(AbstractModel):
 
         # Optimization
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
+        #optimizer = tf.train.AdamOptimizer(learning_rate*1e-2)
         training_step = optimizer.minimize(loss)
 
         # Dense predictions and labels
-        preds, dense_labels = tf.argmax(probs, 1), tf.argmax(target, 1)
+        preds, dense_labels = tf.argmax(logits, 1), tf.argmax(target, 1)
 
         # Other evaluation measures
         accuracy = tf.reduce_mean(

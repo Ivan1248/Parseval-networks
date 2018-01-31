@@ -1,0 +1,10 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: izvjestaj.aux
+A level-1 auxiliary file: bibliography.aux
+The style file: fer.bst
+Database file #1: literatura.bib
+A bad cross reference---entry "cisse17-pn"
+refers to entry "DBLP:conf/icml/2017", which doesn't exist
+Warning--I didn't find a database entry for "colah"
+Warning--I didn't find a database entry for "nndl"
+Warning--I didn't find a database entry for "DBLP:conf/icml/2017"
+(There was 1 error message)

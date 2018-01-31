@@ -23,6 +23,8 @@ class Cifar10Loader(object):
     def load_test(cls,
                   normalize=True,
                   use_test_set_normalization_statistics=False):
+        if cls.mean is None:
+            cls.load_train_val()
         ds = loaders.load_cifar10(cls.data_path, 'test')
         if not normalize:
             return ds

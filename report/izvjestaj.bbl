@@ -1,0 +1,112 @@
+\begin{thebibliography}{13}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abadi et~al.(2015)Abadi, Agarwal, Barham, Brevdo, Chen, Citro,
+  Corrado, Davis, Dean, Devin, Ghemawat, Goodfellow, Harp, Irving, Isard, Jia,
+  Jozefowicz, Kaiser, Kudlur, Levenberg, Man\'{e}, Monga, Moore, Murray, Olah,
+  Schuster, Shlens, Steiner, Sutskever, Talwar, Tucker, Vanhoucke, Vasudevan,
+  Vi\'{e}gas, Vinyals, Warden, Wattenberg, Wicke, Yu, i
+  Zheng]{tensorflow2015-whitepaper}
+Mart\'{\i}n Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
+  Craig Citro, Greg~S. Corrado, Andy Davis, Jeffrey Dean, Matthieu Devin,
+  Sanjay Ghemawat, Ian Goodfellow, Andrew Harp, Geoffrey Irving, Michael Isard,
+  Yangqing Jia, Rafal Jozefowicz, Lukasz Kaiser, Manjunath Kudlur, Josh
+  Levenberg, Dan Man\'{e}, Rajat Monga, Sherry Moore, Derek Murray, Chris Olah,
+  Mike Schuster, Jonathon Shlens, Benoit Steiner, Ilya Sutskever, Kunal Talwar,
+  Paul Tucker, Vincent Vanhoucke, Vijay Vasudevan, Fernanda Vi\'{e}gas, Oriol
+  Vinyals, Pete Warden, Martin Wattenberg, Martin Wicke, Yuan Yu, i Xiaoqiang
+  Zheng.
+\newblock {TensorFlow}: Large-scale machine learning on heterogeneous systems,
+  2015.
+\newblock URL \url{https://www.tensorflow.org/}.
+\newblock Software available from tensorflow.org.
+
+\bibitem[Chetlur et~al.(2014)Chetlur, Woolley, Vandermersch, Cohen, Tran,
+  Catanzaro, i Shelhamer]{sharan-epdl}
+Sharan Chetlur, Cliff Woolley, Philippe Vandermersch, Jonathan Cohen, John
+  Tran, Bryan Catanzaro, i Evan Shelhamer.
+\newblock cudnn: Efficient primitives for deep learning.
+\newblock \emph{CoRR}, abs/1410.0759, 2014.
+\newblock URL \url{http://arxiv.org/abs/1410.0759}.
+
+\bibitem[Ciss{\'{e}} et~al.(2017)Ciss{\'{e}}, Bojanowski, Grave, Dauphin, i
+  Usunier]{cisse17-pn}
+Moustapha Ciss{\'{e}}, Piotr Bojanowski, Edouard Grave, Yann Dauphin, i Nicolas
+  Usunier.
+\newblock Parseval networks: Improving robustness to adversarial examples.
+\newblock U \emph{Proceedings of the 34th International Conference on Machine
+  Learning, {ICML} 2017, Sydney, NSW, Australia, 6-11 August 2017}, stranice
+  854--863, 2017.
+\newblock URL \url{http://proceedings.mlr.press/v70/cisse17a.html}.
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Shlens, i
+  Szegedy]{goodfellow14-ehae}
+Ian~J. Goodfellow, Jonathon Shlens, i Christian Szegedy.
+\newblock Explaining and harnessing adversarial examples.
+\newblock \emph{CoRR}, abs/1412.6572, 2014.
+\newblock URL \url{http://arxiv.org/abs/1412.6572}.
+
+\bibitem[He et~al.(2015)He, Zhang, Ren, i Sun]{he15-resnet}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, i Jian Sun.
+\newblock {Deep Residual Learning for Image Recognition}.
+\newblock \emph{CoRR}, abs/1512.03385, 2015.
+\newblock URL \url{http://arxiv.org/abs/1512.03385}.
+
+\bibitem[He et~al.(2016)He, Zhang, Ren, i Sun]{he16-resnet-imdrn}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, i Jian Sun.
+\newblock Identity mappings in deep residual networks.
+\newblock \emph{CoRR}, abs/1603.05027, 2016.
+\newblock URL \url{http://arxiv.org/abs/1603.05027}.
+
+\bibitem[Kurakin et~al.(2016)Kurakin, Goodfellow, i Bengio]{kurakin-amls}
+Alexey Kurakin, Ian~J. Goodfellow, i Samy Bengio.
+\newblock Adversarial machine learning at scale.
+\newblock \emph{CoRR}, abs/1611.01236, 2016.
+\newblock URL \url{http://arxiv.org/abs/1611.01236}.
+
+\bibitem[Liu et~al.(2016)Liu, Chen, Liu, i Song]{liu-dtaeba}
+Yanpei Liu, Xinyun Chen, Chang Liu, i Dawn Song.
+\newblock Delving into transferable adversarial examples and black-box attacks.
+\newblock \emph{CoRR}, abs/1611.02770, 2016.
+\newblock URL \url{http://arxiv.org/abs/1611.02770}.
+
+\bibitem[Madry et~al.(2017)Madry, Makelov, Schmidt, Tsipras, i
+  Vladu]{madry17-tdlmraa}
+Aleksander Madry, Aleksandar Makelov, Ludwig Schmidt, Dimitris Tsipras, i
+  Adrian Vladu.
+\newblock Towards deep learning models resistant to adversarial attacks.
+\newblock \emph{CoRR}, abs/1706.06083, 2017.
+\newblock URL \url{http://arxiv.org/abs/1706.06083}.
+
+\bibitem[Papernot et~al.(2016)Papernot, Goodfellow, Sheatsley, Feinman, i
+  McDaniel]{papernot2016cleverhans}
+Nicolas Papernot, Ian Goodfellow, Ryan Sheatsley, Reuben Feinman, i Patrick
+  McDaniel.
+\newblock cleverhans v1.0.0: an adversarial machine learning library.
+\newblock \emph{arXiv preprint arXiv:1610.00768}, 2016.
+
+\bibitem[Szegedy et~al.(2013)Szegedy, Zaremba, Sutskever, Bruna, Erhan,
+  Goodfellow, i Fergus]{szegedy13-intrig-ipnn}
+Christian Szegedy, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan,
+  Ian~J. Goodfellow, i Rob Fergus.
+\newblock Intriguing properties of neural networks.
+\newblock \emph{CoRR}, abs/1312.6199, 2013.
+\newblock URL \url{http://arxiv.org/abs/1312.6199}.
+
+\bibitem[Xu i Mannor(2010)]{xu-rg}
+Huan Xu i Shie Mannor.
+\newblock Robustness and generalization.
+\newblock \emph{CoRR}, abs/1005.2243, 2010.
+\newblock URL \url{http://arxiv.org/abs/1005.2243}.
+
+\bibitem[Zagoruyko i Komodakis(2016)]{zagoruyko16-wrn}
+Sergey Zagoruyko i Nikos Komodakis.
+\newblock Wide residual networks.
+\newblock \emph{CoRR}, abs/1605.07146, 2016.
+\newblock URL \url{http://arxiv.org/abs/1605.07146}.
+
+\end{thebibliography}

@@ -15,7 +15,8 @@ class ParsevalResNet(AbstractModel):
                  class_count,
                  batch_size=128,
                  learning_rate_policy=1e-2,
-                 block_properties=layers.ResidualBlockProperties([3, 3]),
+                 block_properties=layers.ResidualBlockProperties(
+                     [3, 3], aggregation='convex'),
                  group_lengths=[3, 3, 3],
                  base_width=16,
                  widening_factor=1,
@@ -82,12 +83,18 @@ class ParsevalResNet(AbstractModel):
         clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
         loss = -tf.reduce_mean(target * tf.log(clipped_probs))
 
+        """# Loss
+        loss = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(
+                labels=target, logits=logits))"""
+
         # Regularization
         w_vars = list(
             filter(lambda x: 'weights' in x.name, tf.global_variables()))
         loss += self.weight_decay * regularization.l2_regularization(w_vars)
 
         # Optimization
+        #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
         training_step = optimizer.minimize(loss)
 

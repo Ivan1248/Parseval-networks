@@ -1,0 +1,224 @@
+%\pdfminorversion=4
+\documentclass{beamer}
+%\documentclass[notes]{beamer}       % print frame + notes
+%\documentclass[notes=only]{beamer}   % only notes
+
+
+%\setbeameroption{show notes on second screen=right}\nofiles{}
+
+\iffalse
+	\usepackage{pgfpages}
+	\setbeameroption{show notes}
+	\setbeameroption{show notes on second screen=right}
+	% pdfpc slajdovi.pdf --notes=right
+\fi
+
+\usepackage[scaled]{beramono}				% sans-serif monospace
+\input{headers/figures}
+\input{headers/diagrams}
+\input{headers/math}
+%\input{headers/misc}
+\usepackage{tabularx}
+\usepackage{multirow}
+
+\newcommand{\ilustracija}[1]{\input{ilustracije/#1}}
+
+\iftrue
+	\usepackage[croatian]{babel}
+	\usepackage[utf8x]{inputenc}	
+\fi
+
+\mode<presentation>
+{
+	\usetheme{Boadilla}      % or try Darmstadt, Madrid, Warsaw, ...
+	\usecolortheme{orchid} % or try albatross, beaver, crane, ...
+	\usefonttheme{structurebold}  % or try default, serif, structurebold, ...
+	\setbeamertemplate{navigation symbols}{}
+	\setbeamertemplate{caption}[numbered]
+}
+\setbeamercolor{structure}{fg=blue!75!green!80!black}	
+
+%\setbeamertemplate{itemize items}[default]
+%\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{section in toc}[circle]
+\setbeamertemplate{subsection in toc}[circle]
+\setbeamertemplate{items}[circle]
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{footline}
+{
+	\leavevmode%
+	\hbox{%
+		\begin{beamercolorbox}[wd=.15\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+			%\usebeamerfont{author in head/foot}\insertshortauthor
+		\end{beamercolorbox}%
+		\begin{beamercolorbox}[wd=.7\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+			\usebeamerfont{title in head/foot}\insertshorttitle  %\hspace*{3em}
+		\end{beamercolorbox}%
+		\begin{beamercolorbox}[wd=.15\paperwidth,ht=2.25ex,dp=1ex,right]{author in head/foot}%
+			\insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+		\end{beamercolorbox}
+	}%
+	\vskip0pt%
+}
+
+\AtBeginSection[]
+{
+%	\begin{frame}<beamer>
+%		\frametitle{Sadržaj}
+%		\tableofcontents[currentsection]
+%	\end{frame}
+}
+
+
+\title{Parsevalove mreže}
+\author{Ivan Grubišić \\ \emph{Voditelj:} Siniša Šegvić}
+%\author{Voditelj: Siniša Šegvić}
+\institute{Fakultet elektrotehnike i računarstva}
+\date{}
+
+
+\begin{document}
+	
+\begin{frame}
+	\titlepage
+\end{frame}
+
+
+\begin{frame}{Sadržaj}
+  \tableofcontents
+\end{frame}
+\note[itemize]{}
+
+\section{Rizik kod nadziranog učenja}
+
+\begin{frame}{Rizik kod nadziranog učenja}	
+	\begin{itemize}
+		\item Cilj algoritma nadziranog strojnog učenja je po parametrima modela $\theta$ minimizirati rizik $R(\theta)$ nad razdiobom označenih primjera $\mathcal{D}$. Uz odabir odgovarajućeg gubitka $L$, rizik se ovako definira:
+		\begin{equation}
+		R(\theta) = \mathbb{E}_{(x,y)\sim\mathcal{D}}\left[L(x, y; \theta)\right].
+		\end{equation}
+		\item Moguće je minimizirati procjenu rizika na temelju dostupnih podataka -- empirijski rizik.
+	\end{itemize}
+\end{frame}
+\note[itemize]{}
+
+\section{Neprijateljski primjeri}
+
+\begin{frame}{Neprijateljski primjeri}	
+\begin{itemize}
+	\item I za najbolje klasifikacijske modele moguće je pronaći primjere jako slične prirodnima, ali da ih model potpuno krivo klasificira.
+	\item Na slici je prikazano generiranje neprijateljskog primjera malom izmjenom izvorne slike.	
+	\begin{figure}[htbp]
+		\centering
+		\begin{tabular}{>{\centering\arraybackslash}m{.2\textwidth}m{.5in}>{\centering\arraybackslash}m{.2\textwidth}m{.1in}>{\centering\arraybackslash}m{.2\textwidth}}
+			\centering\arraybackslash
+			%abs max for panda was 138, eps was 1., so relative eps is ~.007
+			\includegraphics[width=.2\textwidth]{panda_577.png} &%
+			\centering\arraybackslash%
+			$\ +\ .007\ \times$ &%
+			\includegraphics[width=.2\textwidth]{nematode_082.png} &%
+			$=$ & %
+			\includegraphics[width=.2\textwidth]{gibbon_993.png} \\
+			$\centering x$     &%
+			& $\sgn (\nabla_x L(x, y; \theta) )$ & & $x'$ \\
+			"panda" (0.577) & & & & "gibon" (0.993) 
+		\end{tabular}
+		\caption{Prilagođeni prikaz dobivanja neprijateljskog primjera FGSM-om iz (goodfellow14-ehae) Riječi pod navodnicima predstavljaju rezrede, a brojevi u zagradama vjerojatnosti koje mreža dodjeljuje razredima.}
+		\label{panda}
+	\end{figure}	
+\end{itemize}
+\end{frame}
+\note[itemize]{}
+
+\begin{frame}{Pronalaženje neprijateljskih primjera}
+	\begin{itemize}
+		\item Neka $ B_\epsilon(x)$ označava skup primjera takvih da je njihova udaljenost od prirodnog primjera $x$ manja od $\epsilon$. 
+		\item Neprijateljski primjeri se pronalaze rješavanjem optimizacijskog problema s ograničenjem:
+		\begin{equation}
+		x' = \argmax_{x'\in B_\epsilon(x)} L(x', y; \theta).
+		\end{equation}
+		\item Ako su poznati parametri mreže koju se napada, neprijateljske primjere moguće je pronaći postupcima koji se temelje na gradijentnom spustu.
+		\item Mogući su i napadi crne kutije -- kada nisu poznati parametri ili struktura mreže, npr. genetskim algoritmom.
+		\item Također, pokazalo se da su neprijateljski primjeri u velikoj mjeri prenosivi između različitih modela.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Pronalaženje neprijateljskih primjera}
+\begin{itemize}
+	\item Već je jednim pomakom u smjeru predznaka gradijenta moguće pronalaziti neprijateljske primjere (\emph{fast gradient sign method}-FGSM):
+	\begin{equation}
+	x' = x + \epsilon\sgn \nabla_x L(x, y; \theta).
+	\end{equation}
+	\item Jači su iterativni postupci kao što je PGD (\emph{projected gradient descent}):
+	\begin{equation} \label{eq:pgd}
+	x_{i+1} = \Pi_{B_\epsilon(x)} (x_i + \alpha\sgn \nabla_x L(x, y; \theta)).
+	\end{equation}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Neprijateljski rizik}
+\begin{itemize}
+	\item Može se definirati oblik rizika koji se može nazvati \emph{neprijateljskim rizikom}:
+	\begin{equation}\label{eq:adv-risk}
+	R'(\theta) = \mathbb{E}_{(x,y)\sim\mathcal{D}}\left[
+	\max_{x' \in B_\epsilon(x)} L(x, y; \theta) \right].
+	\end{equation}
+	\item Mali neprijateljski rizik predstavlja dobru lokalnu generalizaciju u susjedstvu prirodnih primjera.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Učenje s neprijateljskim primjerima}
+\begin{itemize}
+	\item Trenutno najuspješniji pristup za postizanje otpornosti na neprijateljske primjere je učenje s neprijateljskim primjerima (engl. \emph{adversarial training}).
+	\item Kod učenja s neprijateljskim primjerima skup za učenje se proširuje neprijateljskim primjerima koji se tijekom učenja prilagođavaju parametrima mreže.
+\end{itemize}
+\end{frame}
+
+\section{Parsevalove mreže}
+
+\begin{frame}{Parsevalove mreže}
+\begin{itemize}
+	\item Kod Parsevalovih mreža se kontrolira Lipschitzova konstanta svih slojeva i cijele mreže tako da ne bude veća od 1.
+	\item Motivacija je postizanje otpornosti na neprijateljske primjere kod dubokih neuronskih mreža.
+	\item Prema autorima, takve mreže postižu bolju otpornost na naprijateljske primjere generirane FGSM-om od odgovarajućih mreža koje nisu Parsevalove, brže se uče i njihov kapacitet se bolje iskorištava.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Parsevalove mreže: Ograničavanje neprijateljskog rizika Lipschitzovom konstantom}
+\begin{itemize}
+	\item Neka je $z(x)$ funkcija koju predstavlja sloj logita s obzirom na ulaz mreže (izlaz je $h(x)=\softmax(z(x))$).
+	\item Gubitak unakrsne entropije je $L(h(x;\theta), y) = -\ln h(x;\theta)_y$.
+	\item Gubitak izražen preko $z$: $\ell(z(x;\theta),y) := L(h(x;\theta), y) = -z(x;\theta)_y + \ln \sum_{y'\in\mathcal{Y}}\exp(z(x)_{y'}).$
+	\item Neka za zadanu $p$-normu postoji $\lambda_p$ takav da
+	\begin{equation}\label{eq:loss-lipschitz}
+	\forall z,z'\in \mathbb{R}^C, \forall y\in\mathcal{Y},
+	\lvert \ell(z,y)-\ell(z',y)\rvert 
+	\leq \lambda_p\lVert z-z'\rVert_p.
+	\end{equation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Parsevalove mreže: Ograničavanje neprijateljskog rizika Lipschitzovom konstantom}
+\begin{itemize}
+	\item Za svaki $p$ i $\epsilon > 0$  iz izraza~\ref{eq:loss-lipschitz} i definicije rizika $R(\theta)$ i neprijateljskog rizika $R'(\theta)=R'(\theta,p,\epsilon)$ može se pokazati da vrijedi
+	\begin{align}
+	R'(\theta) 
+	&\leq R(\theta) + \mathbb{E}_{(x,y)\sim\mathcal{D}}\left[
+	\max_{x' \in B_\epsilon(x)} \lvert \ell(z(x;\theta),y)-\ell(z(x;\theta),y) \rvert \right] \\
+	&\leq R(\theta) + \lambda_p\Lambda_p\epsilon.
+	\end{align}
+	\item Budući da uvijek vrijedi $R(\theta) \leq R'(\theta)$, slijedi
+	\begin{equation}
+	0 \leq R'(\theta)-R(\theta) \leq \lambda_p\Lambda_p\epsilon.
+	\end{equation}
+	\item Smanjivanje Lipschitzove konstante samo po sebi nije dovoljno za poboljšanje otpornosti na neprijateljske primjere bez da se našteti općoj generalizaciji.
+	\item Npr. skaliranje logita nekom malom konstantom prje $\softmax$-a smanjuje $R'(\theta)-R(\theta)$, ali ne utječe na otpornost.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Literatura}
+\include{bibliography}
+\end{frame}
+\end{document}

@@ -1,0 +1,4 @@
+\babel@toc {croatian}{}
+\beamer@sectionintoc {1}{Rizik kod nadziranog u\IeC {\v c}enja}{3}{0}{1}
+\beamer@sectionintoc {2}{Neprijateljski primjeri}{4}{0}{2}
+\beamer@sectionintoc {3}{Parsevalove mre\IeC {\v z}e}{9}{0}{3}

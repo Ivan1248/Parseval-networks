@@ -1,0 +1,39 @@
+\usepackage[croatian]{babel}		% teorem
+
+\usepackage{amsmath}
+
+\usepackage{commath}  % abs, norm, derivacije (\od[2]{f}{x}, \od[2]{f}{x} \dif x = dx)
+
+
+\usepackage{bm}
+
+%\newtheorem{definition}{Definicija}[section]
+%\newtheorem{theorem}{Teorem}[section]
+%\newtheorem{corollary}{Korolar}[theorem]
+
+\DeclareMathOperator{\step}{step}
+\DeclareMathOperator{\Heaviside}{H}
+\DeclareMathOperator{\Ramp}{R}
+\DeclareMathOperator{\softplus}{softplus}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\logistic}{\sigma}
+
+\newcommand{\mat}[1]{\bm{#1}}
+%\newcommand{\m}[1]{\bm{#1}}
+\let\vec\relax
+\newcommand{\vec}[1]{\bm{#1}}
+%\newcommand{\v}[1]{\bm{#1}}
+\newcommand{\tens}[1]{\bm{\mathsf{#1}}} 	% undergraduate algebra version
+
+\newcommand{\transpose}{\mathsf T} 	% undergraduate algebra version
+
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{\partial #1}{\partial #2}}  % TODO
+
+\DeclareMathOperator*{\argmin}{arg\,min} % thin space, limits underneath in displays
+\DeclareMathOperator*{\argmax}{arg\,max} % thin space, limits underneath in displays
+
+\DeclareMathOperator{\sgn}{sgn}
+
+\usepackage{stmaryrd}  % llbracket \rrbracket, ...
+

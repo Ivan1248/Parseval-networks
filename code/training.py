@@ -25,7 +25,7 @@ def train(model: AbstractModel,
     from processing.data_augmentation import augment_cifar
 
     model.test(ds_val)
-    ds_train_part = ds_train[:ds_val.size]
+    ds_train_part = ds_train[:ds_val.size*2]
     for i in range(epoch_count):
         prepr_ds_train = Dataset(
             list(map(augment_cifar, ds_train.images)), ds_train.labels,

@@ -21,6 +21,11 @@ def fuse_images(im1, im2, a):
 
 
 def compose(images, format='0,0;1,0-1'):
+    if format is None:
+        return np.concatenate([
+            np.concatenate([im for im in row], 1) for row in images
+        ], 0)
+
     def get_image(frc):
         inds = [int(i) for i in frc.split('-')]
         assert (len(inds) <= 2)
@@ -60,11 +65,11 @@ class Viewer:
                 i += 1
             i = i % data.size
             imgplot.set_data(mapping(data[i]))
-            fig.canvas.set_window_title(str(i))
+            fig.canvas.set_window_title(str(i) +"-" + self.name)
             fig.canvas.draw()
 
         fig, ax = plt.subplots()
         fig.canvas.mpl_connect('key_press_event', on_press)
-        fig.canvas.set_window_title('0')
+        fig.canvas.set_window_title(self.name)
         imgplot = ax.imshow(mapping(data[0]))
         plt.show()
