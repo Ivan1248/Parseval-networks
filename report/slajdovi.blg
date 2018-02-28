@@ -1,4 +1,7 @@
 This is BibTeX, Version 0.99dThe top-level auxiliary file: slajdovi.aux
-I found no \bibdata command---while reading file slajdovi.aux
-I found no \bibstyle command---while reading file slajdovi.aux
-(There were 2 error messages)
+A level-1 auxiliary file: bibliography.aux
+The style file: fer.bst
+Database file #1: literatura.bib
+Warning--I didn't find a database entry for "colah"
+Warning--I didn't find a database entry for "nndl"
+(There were 2 warnings)

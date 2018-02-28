@@ -62,7 +62,7 @@ for parseval in [False, True]:
             clip_max=clip_max)
         images_adv, = batch_eval(
             model._sess, [model.nodes.input], [n_fgsm],
-            [ds_test.images[:model.batch_size*128]],
+            [ds_test.images[:model.batch_size*64]],
             args={'batch_size': model.batch_size},
             feed={model._is_training: False})
         adv_ds_test = Dataset(images_adv, ds_test.labels, ds_test.class_count)

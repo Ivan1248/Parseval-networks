@@ -55,6 +55,39 @@ def conv(x,
         return h
 
 
+def separable_conv(x,
+                   ksize,
+                   width,
+                   channel_multiplier=1,
+                   stride=1,
+                   padding='SAME',
+                   bias=True,
+                   reuse: bool = None,
+                   scope: str = None):
+    '''
+    A wrapper for tf.nn.conv2d.
+    :param x: 4D input "NHWC" tensor 
+    :param ksize: int or tuple of 2 ints representing spatial dimensions 
+    :param width: number of output channels
+    :param stride: int (or float in case of transposed convolution)
+    :param padding: string. "SAME" or "VALID" 
+    :param bias: add biases
+    '''
+    with var_scope(scope, 'Conv', [x], reuse=reuse):
+        in_width = x.shape[-1].value
+        h = tf.nn.separable_conv2d(
+            x,
+            depthwise_filter=conv_weight_variable(
+                ksize, in_width, channel_multiplier, name="wweights"),
+            pointwise_filter=conv_weight_variable(
+                (1, 1), in_width*channel_multiplier, width, name="pweights"),
+            strides=[1] + [stride] * 2 + [1],
+            padding=padding)
+        if bias:
+            h += bias_variable(width)
+        return h
+
+
 def conv_transp(
         x,
         ksize,
@@ -314,6 +347,7 @@ def resnet(x,
     :param block_properties: kernel sizes of convolutional layers in a block
     :param bn_decay: batch normalization exponential moving average decay
     '''
+
     def _bn_relu(h, id):
         return bn_relu(
             h,

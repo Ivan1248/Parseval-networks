@@ -8,24 +8,21 @@ from .abstract_model import AbstractModel
 from .tf_utils import layers, regularization, update_ops
 
 
-class ParsevalResNet(AbstractModel):
+class ResNetN(AbstractModel):
 
     def __init__(self,
                  input_shape,
                  class_count,
                  batch_size=128,
                  learning_rate_policy=1e-2,
-                 block_properties=layers.ResidualBlockProperties(
-                     [3, 3], aggregation='convex'),
+                 block_properties=layers.ResidualBlockProperties([3, 3]),
                  group_lengths=[3, 3, 3],
                  base_width=16,
                  widening_factor=1,
                  weight_decay=5e-4,
-                 ortho_retraction_rate=3e-4,
                  training_log_period=1,
                  name='ResNet'):
-        self.completed_epoch_count = 0
-        assert block_properties.aggregation == 'convex'
+        self.completed_epoch_count = 0  # TODO: remove
         self.block_properties = block_properties
         self.group_lengths = group_lengths
         self.depth = 1 + sum(group_lengths) * len(block_properties.ksizes) + 1
@@ -33,7 +30,6 @@ class ParsevalResNet(AbstractModel):
         self.base_width = base_width
         self.widening_factor = widening_factor
         self.weight_decay = weight_decay
-        self.ortho_retraction_rate = ortho_retraction_rate
         super().__init__(
             input_shape=input_shape,
             class_count=class_count,
@@ -43,23 +39,8 @@ class ParsevalResNet(AbstractModel):
             name=name)
 
     def _build_graph(self, learning_rate, epoch, is_training):
-        import layers
-
-        """def bn_nop(*args, **kwargs):
-            print("bn_nop")
-            return args[0]
-
-        layers.batch_normalization = bn_nop"""
-
-        original_conv = layers.conv
-
-        def parseval_replacement_conv(*args, **kwargs):
-            ksize = args[1]
-            h = original_conv(*args, **kwargs)
-            return h / ksize  # fixed (was ksize**2)
-
-        ## WARNING - replaces the original layers.conv with replacement_conv
-        layers.conv = parseval_replacement_conv
+        import layers  ## seems to be required for monkey-patching
+        from layers import conv, resnet
 
         # Input image and labels placeholders
         input_shape = [None] + list(self.input_shape)
@@ -67,46 +48,44 @@ class ParsevalResNet(AbstractModel):
         input = tf.placeholder(tf.float32, shape=input_shape)
         target = tf.placeholder(tf.float32, shape=output_shape)
 
+
+        def bn_nop(*args, **kwargs):
+            print("bn_nop")
+            return args[0]
+
+        layers.batch_normalization = bn_nop
+
         # Hidden layers
-        h = layers.resnet(
+        h = resnet(
             input,
             is_training=is_training,
             base_width=self.base_width,
             widening_factor=self.widening_factor,
             group_lengths=self.group_lengths,
-            block_properties=self.block_properties,
-            bn_offset_scale=(True, False))  # TODO
+            block_properties=self.block_properties)
 
         # Global pooling and softmax classification
         h = tf.reduce_mean(h, axis=[1, 2], keep_dims=True)
-        logits = layers.conv(h, 1, self.class_count)
+        logits = conv(h, 1, self.class_count)
         logits = tf.reshape(logits, [-1, self.class_count])
         probs = tf.nn.softmax(logits)
 
-        ## IMPORTANT - restores the original layers.conv with replacement_conv
-        layers.conv = original_conv
-
         # Loss
-        clipped_probs = tf.clip_by_value(probs, 1e-10, 1.0)
-        loss = -tf.reduce_mean(target * tf.log(clipped_probs))
-
-        """# Loss
         loss = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits(
-                labels=target, logits=logits))"""
+                labels=target, logits=logits))
 
         # Regularization
-        w_vars = list(
-            filter(lambda x: 'weights' in x.name, tf.global_variables()))
+        w_vars = filter(lambda x: 'weights' in x.name, tf.global_variables())
         loss += self.weight_decay * regularization.l2_regularization(w_vars)
 
         # Optimization
-        #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
+        #optimizer = tf.train.AdamOptimizer(learning_rate*1e-2)
         training_step = optimizer.minimize(loss)
 
         # Dense predictions and labels
-        preds, dense_labels = tf.argmax(probs, 1), tf.argmax(target, 1)
+        preds, dense_labels = tf.argmax(logits, 1), tf.argmax(target, 1)
 
         # Other evaluation measures
         accuracy = tf.reduce_mean(
@@ -120,6 +99,5 @@ class ParsevalResNet(AbstractModel):
             probs=probs,
             loss=loss,
             training_step=training_step,
-            training_post_step=update_ops.ortho_retraction_step(
-                w_vars, self.ortho_retraction_rate),
+            training_post_step=update_ops.normalize_kernels(w_vars, True),
             evaluation={'accuracy': accuracy})

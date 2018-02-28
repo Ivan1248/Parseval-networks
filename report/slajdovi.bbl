@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Shlens, i
+  Szegedy]{goodfellow14-ehae}
+Ian~J. Goodfellow, Jonathon Shlens, i Christian Szegedy.
+\newblock Explaining and harnessing adversarial examples.
+\newblock \emph{CoRR}, abs/1412.6572, 2014.
+\newblock URL \url{http://arxiv.org/abs/1412.6572}.
+
+\end{thebibliography}

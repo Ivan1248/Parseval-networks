@@ -23,7 +23,6 @@ Mart\'{\i}n Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen,
 \newblock {TensorFlow}: Large-scale machine learning on heterogeneous systems,
   2015.
 \newblock URL \url{https://www.tensorflow.org/}.
-\newblock Software available from tensorflow.org.
 
 \bibitem[Chetlur et~al.(2014)Chetlur, Woolley, Vandermersch, Cohen, Tran,
   Catanzaro, i Shelhamer]{sharan-epdl}

@@ -1,4 +1,11 @@
-\beamer@slide {panda}{4}
-\beamer@slide {eq:pgd}{6}
-\beamer@slide {eq:adv-risk}{7}
+\beamer@slide {panda}{3}
+\beamer@slide {eq:pgd}{5}
+\beamer@slide {eq:adv-risk}{6}
 \beamer@slide {eq:loss-lipschitz}{10}
+\beamer@slide {eq:konv-lipschitz}{13}
+\beamer@slide {eq:linear-combination}{14}
+\beamer@slide {tab:adv-robustness}{18}
+\beamer@slide {fig:krivulje-pogreske}{19}
+\beamer@slide {fig:krivulje-pogreske-moje}{21}
+\beamer@slide {fig:krivulje-otpornosti}{22}
+\beamer@slide {fig:neprijateljski-primjeri}{23}

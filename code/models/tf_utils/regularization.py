@@ -25,3 +25,16 @@ def orthogonality_penalty(weight_vars, ord='fro'):
         return tf.reduce_sum(d)
 
     return tf.add_n(list(map(get_loss, weight_vars)))
+
+
+def normality_penalty(weight_vars, ord='fro'):
+    """
+    A loss that penalizes weight matrices with non-normalized rows with an 
+    operator norm (defined with ord) of (weight_vars.T @ weight_vars - I). 
+    The norm is squared in case of Frobenius or 2 norm.
+    :param weights: a list of convolutional kernel weights with shape 
+        [ksize, ksize, in_channels, out_channels]
+    :param ord: operator norm. see ord parameter in 
+        https://www.tensorflow.org/api_docs/python/tf/norm
+    """
+    return None
