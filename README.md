@@ -86,9 +86,15 @@ The scripts containing "pars" are for training Parseval wide resnets. The script
 
 #### Testing
 
-To test a saved trained model, you need to *modify* and run one of the following scripts: 
+To test a saved trained model, you need to *modify* (because saved model names are hardcoded) and run one of the following scripts: 
 ```
-load_wrn_test.py  # if you want to test
+load_wrn_test.py
 plot_adversarial_robustness.py
 plot_classification_error_curves.py
+```
+
+You can also try these (which also need to be *modified*):
+```
+display_adversarial_examples_by_eps.py
+display_adversarial_examples.py
 ```
