@@ -1,11 +1,11 @@
 # Parseval-networks
 This repository is the result of my universtity project with the goal to implement some of the models and reproduce some of the results from the [Parseval networks](https://arxiv.org/abs/1704.08847) paper. The main idea of the paper is to control the Lipschitz norm of the model by enforcing weight matrices to be nearly orthognal and having a spectral norm of 1.
 
-**NOTE**: There are some (unintended) differences between the original models and those implemented here. The Wide ResNet implementation has a bit worse performance than the [original implementation](https://github.com/szagoruyko/wide-residual-networks). The results of the experiments are in section 3 in this [report](https://github.com/Ivan1248/Parseval-networks/blob/master/report/izvjestaj.pdf) (it's in Croatian).
+**NOTE**: There are some unintended differences between the original models and those implemented here. The Wide ResNet implementation has a bit worse performance than the [original implementation](https://github.com/szagoruyko/wide-residual-networks). The results of the experiments are in section 3 in this [report](https://github.com/Ivan1248/Parseval-networks/blob/master/report/izvjestaj.pdf) (it's in Croatian).
 
 ### Code structure
 
-Due to time constraints (and abandonment of the code) the code (especially the outer parts of it) is not very well designed and is undocumented. Here is a directory tree describing some parts of the code:
+Due to time constraints and abandonment, the code (especially the outer parts of it) is not very well designed and is undocumented. Here is a directory tree describing some parts of the code:
 ```
 code 
 ├── cleverhans  # code for adversarial examples, copied from https://github.com/tensorflow/cleverhans
